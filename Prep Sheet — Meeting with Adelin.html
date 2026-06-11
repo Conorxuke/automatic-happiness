@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<!-- saved from url=(0065)file:///Users/conorflynn/Downloads/Adelin_Meeting_Prep_Sheet.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prep Sheet — Meeting with Adelin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link href="./Prep Sheet — Meeting with Adelin_files/css2" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f6f1e7;
+    --paper-2:#efe8da;
+    --ink:#211d18;
+    --ink-soft:#4a443b;
+    --rule:#d8cfbd;
+    --clay:#b1462a;
+    --clay-deep:#8f3620;
+    --teal:#1f5a52;
+    --gold:#9c7a2e;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{-webkit-font-smoothing:antialiased;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Hanken Grotesk',sans-serif;
+    line-height:1.45;
+    padding:32px 20px 60px;
+  }
+  .sheet{
+    max-width:1040px;
+    margin:0 auto;
+    background:
+      radial-gradient(circle at 12% -5%, rgba(177,70,42,0.06), transparent 38%),
+      radial-gradient(circle at 100% 0%, rgba(31,90,82,0.06), transparent 30%),
+      var(--paper);
+    border:1px solid var(--rule);
+    border-radius:6px;
+    padding:42px 46px 46px;
+    box-shadow:0 18px 50px -28px rgba(33,29,24,0.45);
+    animation:rise .6s ease both;
+  }
+  @keyframes rise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+
+  /* Header */
+  .kicker{
+    font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--clay);font-weight:700;
+  }
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:38px;
+    line-height:1.02;
+    letter-spacing:-.01em;
+    margin:6px 0 4px;
+  }
+  .meta{
+    font-size:12.5px;color:var(--ink-soft);
+    display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:8px;
+  }
+  .meta b{color:var(--ink);font-weight:600;}
+  .oneliner{
+    font-family:'Fraunces',serif;
+    font-style:italic;
+    font-size:16.5px;
+    line-height:1.4;
+    color:var(--teal);
+    border-left:3px solid var(--clay);
+    padding:10px 0 10px 16px;
+    margin:18px 0 2px;
+    max-width:840px;
+  }
+  .topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap;}
+  .stamp{
+    text-align:right;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--ink-soft);line-height:1.7;white-space:nowrap;
+  }
+  .stamp b{display:block;color:var(--clay);font-weight:700;}
+
+  hr.major{border:none;border-top:1.5px solid var(--ink);margin:26px 0 20px;opacity:.85;}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:30px 42px;}
+  section{break-inside:avoid;}
+  .sec-label{
+    font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;
+    color:var(--ink);display:flex;align-items:center;gap:9px;margin-bottom:11px;
+  }
+  .sec-label .n{
+    font-family:'Fraunces',serif;font-style:italic;font-weight:600;
+    color:var(--clay);font-size:18px;letter-spacing:0;text-transform:none;
+  }
+  .sec-label::after{content:"";flex:1;height:1px;background:var(--rule);}
+
+  p.lead{font-size:13.5px;color:var(--ink-soft);margin-bottom:10px;}
+
+  ul{list-style:none;}
+  li{
+    font-size:13px;line-height:1.42;padding:4px 0 4px 18px;position:relative;
+    color:var(--ink);
+  }
+  li::before{
+    content:"";position:absolute;left:0;top:11px;width:6px;height:6px;
+    background:var(--clay);border-radius:50%;
+  }
+  li b{font-weight:600;}
+  .arrow{color:var(--teal);font-weight:700;}
+
+  /* evolution rows */
+  .evo li{padding-left:0;}
+  .evo li::before{display:none;}
+  .evo .from{color:var(--ink-soft);}
+  .evo .to{color:var(--ink);font-weight:600;}
+
+  /* talk track */
+  .track{
+    background:var(--paper-2);
+    border:1px solid var(--rule);
+    border-radius:5px;
+    padding:20px 22px;
+    margin-top:4px;
+  }
+  .beat{display:flex;gap:14px;padding:8px 0;border-bottom:1px dashed var(--rule);}
+  .beat:last-child{border-bottom:none;}
+  .beat .t{
+    font-family:'Fraunces',serif;font-weight:600;color:var(--clay);
+    font-size:13px;min-width:46px;white-space:nowrap;padding-top:1px;
+  }
+  .beat .s{font-size:12.5px;line-height:1.4;}
+  .beat .s b{font-weight:600;}
+  .beat .s em{font-style:italic;color:var(--teal);}
+
+  /* watchouts */
+  .watch{
+    margin-top:24px;border:1px solid var(--clay);border-radius:5px;
+    background:linear-gradient(180deg, rgba(177,70,42,0.05), rgba(177,70,42,0.02));
+    padding:16px 20px;
+  }
+  .watch .sec-label{color:var(--clay-deep);}
+  .watch .sec-label::after{background:rgba(177,70,42,.3);}
+  .watch-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+  .watch-grid h4{font-size:12px;font-weight:700;margin-bottom:3px;color:var(--clay-deep);}
+  .watch-grid p{font-size:11.5px;line-height:1.4;color:var(--ink-soft);}
+
+  footer{
+    margin-top:24px;font-size:11px;color:var(--ink-soft);
+    display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    border-top:1px solid var(--rule);padding-top:12px;
+  }
+  footer .listen{font-style:italic;font-family:'Fraunces',serif;color:var(--teal);font-size:12px;}
+
+  @media (max-width:760px){
+    .grid{grid-template-columns:1fr;gap:24px;}
+    .watch-grid{grid-template-columns:1fr;gap:12px;}
+    .sheet{padding:30px 22px;}
+    h1{font-size:30px;}
+  }
+
+  @media print{
+    @page{size:A4;margin:13mm;}
+    body{background:#fff;padding:0;}
+    .sheet{box-shadow:none;border:none;animation:none;padding:0;max-width:none;}
+    .track,.watch{break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="topbar">
+    <div>
+      <div class="kicker">Meeting Prep · Build Partner Conversation</div>
+      <h1>Adelin &amp; the Trinzo Back&nbsp;Office</h1>
+      <div class="meta">
+        <span><b>You:</b> Conor Flynn, Head of Innovation</span>
+        <span><b>Them:</b> Adelin Diac — founder, CallCrew (callcrew-ai.com)</span>
+        <span><b>Ask:</b> 2–3 days/wk · ~8 weeks · build &amp; hand off</span>
+      </div>
+    </div>
+    <div class="stamp">
+      <b>Today</b>
+      Round 2 of 2
+      <span style="opacity:.7">Confidential</span>
+    </div>
+  </div>
+
+  <div class="oneliner">
+    “My thinking moved from <span style="font-style:normal">replace a person &amp; automate admin</span> → to <span style="font-style:normal;font-weight:600">build one connected, cost-neutral, human-in-the-loop system that captures R&amp;D tax credits, protects continuity, and produces client evidence — architecture already reviewed.”</span>
+  </div>
+
+  <hr class="major">
+
+  <div class="grid">
+
+    <!-- Evolution -->
+    <section>
+      <div class="sec-label"><span class="n">A</span> The evolution — what to show him</div>
+      <p class="lead">Lead with this. It proves you've done the homework and he's not starting from a blank page.</p>
+      <ul class="evo">
+        <li><span class="to">Point agents</span> <span class="arrow">→</span> <span class="to">shared data schema</span> <span class="from">— answers the “no shared context” problem you flagged to him.</span></li>
+        <li><span class="from">SharePoint Lists</span> <span class="arrow">→</span> <span class="to">Supabase (live) + Retool (dashboard)</span><span class="from">, SharePoint demoted to archive.</span></li>
+        <li><span class="from">Opus everywhere</span> <span class="arrow">→</span> <span class="to">Haiku + Sonnet, hard token budgets</span> <span class="from">— ~€40–70/mo.</span></li>
+        <li><span class="from">Auto EI “compliance tracker”</span> <span class="arrow">→</span> <span class="to">human-flagged Documentation &amp; SOP engine</span> <span class="from">— lower legal risk.</span></li>
+        <li><span class="from">“~10–15 days”</span> <span class="arrow">→</span> <span class="to">phased 8-week sprint plan</span> <span class="from">with acceptance tests &amp; owners.</span></li>
+      </ul>
+    </section>
+
+    <!-- What he's likely thinking -->
+    <section>
+      <div class="sec-label"><span class="n">B</span> What he's likely thought so far</div>
+      <p class="lead">Hypothesis to test — the “Architect-Reviewed” stamp suggests his fingerprints are already on v3.</p>
+      <ul>
+        <li>CallCrew <b>is</b> this pattern: connected agents, shared brain, human handoff “the moment it matters” — so the architecture is familiar to him.</li>
+        <li>His real question isn't <i>can it be built</i> — it's <b>whether it's worth his time</b> beside a scaling company.</li>
+        <li>Draw out: is <b>Airia</b> alone enough (your old n8n question vanished in v3)? Hardest integration in Teams/SharePoint/Asana? Does the “first client of its own product” angle motivate him?</li>
+      </ul>
+    </section>
+
+    <!-- Talk about -->
+    <section>
+      <div class="sec-label"><span class="n">1</span> What to talk about</div>
+      <ul>
+        <li><b>The evolution</b> (above) — frames you as a serious counterpart.</li>
+        <li><b>His reaction &amp; thinking since you last spoke</b> — genuinely listen, don't just present.</li>
+        <li><b>Honest logistics:</b> capacity, scope (3 vs 5 agents), engagement + maintenance model, commercials.</li>
+        <li><b>Park the EI decisions</b> — that's your homework, not his.</li>
+      </ul>
+    </section>
+
+    <!-- Get out of it -->
+    <section>
+      <div class="sec-label"><span class="n">2</span> What to get out of it</div>
+      <p class="lead">A clear read on three binaries:</p>
+      <ul>
+        <li>Is he <b>interested in the problem</b> itself?</li>
+        <li>Is the <b>time commitment feasible</b> in this window?</li>
+        <li>Does the <b>architecture hold up</b> to him, or does he want to change something material?</li>
+      </ul>
+      <p class="lead" style="margin-top:8px">If all green: a verbal “I'm in” + agreement to one concrete first step.</p>
+    </section>
+
+    <!-- Want him to think -->
+    <section>
+      <div class="sec-label"><span class="n">3</span> What he should think leaving</div>
+      <ul>
+        <li><i>“Well-scoped, serious problem — not a vague swamp.”</i></li>
+        <li><i>“Conor's done the thinking; I'd build on real foundations.”</i></li>
+        <li><i>“A finite 8-week piece I can actually finish — and it's interesting.”</i></li>
+        <li><i>“The time ask is honest. I want in.”</i></li>
+      </ul>
+      <p class="lead" style="margin-top:8px"><b>Avoid:</b> him feeling it's open-ended advisory hand-holding or an unbounded commitment competing with CallCrew.</p>
+    </section>
+
+    <!-- Next steps -->
+    <section>
+      <div class="sec-label"><span class="n">4</span> Next steps to tee up</div>
+      <ul>
+        <li>He confirms <b>capacity + engagement shape</b> (build sprint + ~1 day/mo retainer).</li>
+        <li>Lock <b>scope</b>: which agents + Phase 1 boundary (Agent 5 = SLA only, invoices deferred).</li>
+        <li><b>He owns:</b> Supabase + schema/migrations, Airia routing + token budgets, Retool approval queue.</li>
+        <li><b>You own:</b> EI qualifying criteria, work-package IDs, named sign-offs (block Phase 3).</li>
+        <li>Agree the <b>number</b> — and whether to re-baseline leadership from 3 → 5 agents.</li>
+      </ul>
+    </section>
+
+  </div>
+
+  <!-- Talk track -->
+  <div style="margin-top:26px">
+    <div class="sec-label"><span class="n">▶</span> Opening five minutes — talk-track</div>
+    <div class="track">
+      <div class="beat">
+        <div class="t">0:30</div>
+        <div class="s"><b>Frame it.</b> “Thanks for making the time. This isn't ten hours of advice I'm after — it's a real, finite build, and I wanted to show you how far the thinking's moved before I ask anything of you.”</div>
+      </div>
+      <div class="beat">
+        <div class="t">2:00</div>
+        <div class="s"><b>The evolution.</b> “Last time I had an instinct — SharePoint, a handful of point agents. It's hardened into one idea: <em>a shared schema, not siloed agents</em>, with Supabase and a Retool dashboard the coordinator actually owns. And the job changed — it's not patching Ciara's gap, it's a system that throws off tax evidence, living SOPs and client visibility as a byproduct.”</div>
+      </div>
+      <div class="beat">
+        <div class="t">1:00</div>
+        <div class="s"><b>Hand it to him.</b> “But a lot of this already has your fingerprints on it. I want your read since we last spoke — what's landed, and what would you change?” <em>Then stop talking and listen.</em></div>
+      </div>
+      <div class="beat">
+        <div class="t">1:30</div>
+        <div class="s"><b>The honest ask.</b> “Here's the shape: 2–3 consecutive days a week for about eight weeks, then a light retainer. I know CallCrew's flying — you've InstallerSHOW in two weeks. So I'll ask it straight: is that time real for you right now, and does the problem actually interest you?”</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Watch-outs -->
+  <div class="watch">
+    <div class="sec-label">⚑ Watch-outs — hold these in your head</div>
+    <div class="watch-grid">
+      <div>
+        <h4>Capacity is the real risk</h4>
+        <p>He's a founder mid-scale (NDRC / EI / PorterShed-backed, four markets, trade show in two weeks). 2–3 days/wk is a big pull. Test it openly today, don't assume.</p>
+      </div>
+      <div>
+        <h4>Scope vs budget gap</h4>
+        <p>Leadership approved <b>3 agents, €15–20k</b>. The blueprint is now <b>5 agents / 8 weeks</b>. Decide which you're committing to — and whether the envelope still holds.</p>
+      </div>
+      <div>
+        <h4>Founder, not contractor</h4>
+        <p>Pitch the case-study / credential upside, not “come do bespoke consulting.” The honest offer is a clean, finite, well-paid build — not an open tap on his time.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <span><b>Listen for:</b> genuine interest in the problem · a feasible time commitment · curiosity about the bigger picture.</span>
+    <span class="listen">Best outcome: “Here's exactly how I'd build it — and yes, I'm in.”</span>
+  </footer>
+
+</div>
+
+
+</body></html>

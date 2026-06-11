@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<!-- saved from url=(0061)file:///Users/conorflynn/Downloads/Airia_Call_Crib_Sheet.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Airia Call — Crib Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link href="./Airia Call — Crib Sheet_files/css2" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f6f1e7; --paper-2:#efe8da;
+    --ink:#211d18; --ink-soft:#4a443b; --rule:#d8cfbd;
+    --clay:#b1462a; --clay-deep:#8f3620; --teal:#1f5a52;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--paper);color:var(--ink);
+    font-family:'Hanken Grotesk',-apple-system,sans-serif;line-height:1.4;padding:28px 16px 48px;}
+  .sheet{max-width:1180px;margin:0 auto;background:
+      radial-gradient(circle at 8% -4%, rgba(177,70,42,0.06), transparent 34%),
+      radial-gradient(circle at 100% 0%, rgba(31,90,82,0.06), transparent 26%),
+      var(--paper);
+    border:1px solid var(--rule);border-radius:6px;padding:30px 34px 34px;
+    box-shadow:0 18px 50px -28px rgba(33,29,24,0.45);animation:rise .5s ease both;}
+  @keyframes rise{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+  .kicker{font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--clay);font-weight:700;}
+  h1{font-family:'Fraunces',serif;font-weight:600;font-size:29px;line-height:1.02;letter-spacing:-.01em;margin:5px 0 5px;}
+  .sub{font-family:'Fraunces',serif;font-style:italic;font-size:14px;color:var(--teal);max-width:920px;}
+  hr.major{border:none;border-top:1.5px solid var(--ink);margin:16px 0 0;opacity:.85;}
+
+  /* the one thesis */
+  .thesis{margin-top:16px;border-left:4px solid var(--clay);background:linear-gradient(180deg, rgba(177,70,42,0.07), rgba(177,70,42,0.02));
+    padding:11px 16px;border-radius:0 5px 5px 0;}
+  .thesis h3{font-family:'Fraunces',serif;font-weight:600;font-size:14px;color:var(--clay-deep);margin-bottom:2px;}
+  .thesis p{font-size:12.5px;color:var(--ink-soft);max-width:1000px;}
+  .thesis b{color:var(--ink);font-weight:600;}
+
+  /* ledger */
+  .ledger{margin-top:18px;border-top:1px solid var(--rule);}
+  .row{display:grid;grid-template-columns:240px 1fr;gap:24px;padding:13px 0;border-bottom:1px solid var(--rule);}
+  .concern h4{font-family:'Fraunces',serif;font-size:15px;font-weight:600;color:var(--teal);}
+  .concern .why{font-size:11.5px;color:var(--ink-soft);margin-top:3px;line-height:1.35;}
+  .asks{display:flex;flex-direction:column;gap:5px;justify-content:center;}
+  .asks .q{font-size:12.5px;line-height:1.32;padding-left:18px;position:relative;color:var(--ink);}
+  .asks .q::before{content:"";position:absolute;left:0;top:7px;width:6px;height:6px;background:var(--clay);border-radius:50%;}
+  .asks .q b{font-weight:600;}
+
+  /* flags */
+  .flags{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px;}
+  .flag{border:1px solid var(--rule);border-radius:5px;padding:12px 15px;background:rgba(31,90,82,0.035);}
+  .flag h5{font-size:10px;letter-spacing:.15em;text-transform:uppercase;font-weight:700;color:var(--clay);margin-bottom:5px;}
+  .flag p{font-size:12px;color:var(--ink-soft);line-height:1.38;}
+  .flag p b{color:var(--ink);font-weight:600;}
+
+  @media(max-width:760px){
+    .row{grid-template-columns:1fr;gap:8px;}
+    .flags{grid-template-columns:1fr;}
+    .sheet{padding:22px 18px;}h1{font-size:24px;}
+  }
+  @media print{
+    @page{size:A4 landscape;margin:9mm;}
+    body{background:#fff;padding:0;}
+    .sheet{box-shadow:none;border:none;animation:none;padding:0;max-width:none;}
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="kicker">Crib sheet · Airia call · back-office orchestration</div>
+  <h1>What to ask Airia — and why.</h1>
+  <p class="sub">Concerns down the left, the questions to fire next to each. Built to keep open during the call.</p>
+  <hr class="major">
+
+  <div class="thesis">
+    <h3>The one thing to hold onto</h3>
+    <p><b>The risk isn't Airia — it's the build around it.</b> Airia covers the four engines, routing and governance well. The <b>dashboard, the Supabase/SharePoint schema, and the human-in-the-loop queue</b> are bespoke — exactly what a thin tech team can't easily build or maintain. Spend the call finding out how much of that Airia can absorb, so we own as little custom code as possible.</p>
+  </div>
+
+  <div class="ledger">
+
+    <div class="row">
+      <div class="concern">
+        <h4>Token vs seat pricing</h4>
+        <div class="why">Their published model is execution-based with free seats — so the framing is really <i>executions + model tokens</i>, not seats.</div>
+      </div>
+      <div class="asks">
+        <div class="q">What counts as <b>one execution</b> — a full item end-to-end, or each engine call? (Extract→Draft→Audit could be 3+.)</div>
+        <div class="q">Are <b>model tokens bundled</b>, or bring-your-own-key billed separately?</div>
+        <div class="q">Does cost scale with <b>item-volume or headcount</b> — and what tier are we actually on a year in?</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="concern">
+        <h4>Technical overhead</h4>
+        <div class="why">How much is config vs. real engineering — especially the connective tissue, not the engines.</div>
+      </div>
+      <div class="asks">
+        <div class="q">Can all <b>four engines be built in Agent Builder</b> without an engineer?</div>
+        <div class="q">Native connectors for <b>Teams, SharePoint, Asana</b> — which are out of the box?</div>
+        <div class="q">Can <b>human-in-the-loop approval</b> live inside an Airia workflow natively, so we don't build a custom queue?</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="concern">
+        <h4>Manageability</h4>
+        <div class="why">Can a non-technical coordinator actually run and extend this without us calling for help each time.</div>
+      </div>
+      <div class="asks">
+        <div class="q">Can a <b>non-technical coordinator add a new "topping"</b> (config) on their own?</div>
+        <div class="q">When an engine <b>misbehaves, who debugs</b> — us or you?</div>
+        <div class="q">Is <b>provenance</b> (engine, model version, timestamp) captured natively?</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="concern">
+        <h4>Running on low internal tech capacity <span style="color:var(--clay);font-style:italic;font-family:&#39;Fraunces&#39;,serif;font-weight:500;">— the ask</span></h4>
+        <div class="why">We've lost internal depth. The goal is to push surface onto Airia as managed, and keep owned code minimal.</div>
+      </div>
+      <div class="asks">
+        <div class="q"><b>What can you take off our plate</b> — managed setup, professional services, or a partner who builds it?</div>
+        <div class="q">How much of the <b>dashboard + Supabase glue can Airia absorb</b> so we maintain less code?</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="flags">
+    <div class="flag">
+      <h5>Strategic flag · the Medtronic thesis</h5>
+      <p><b>Enterprise audit ≠ GxP validation.</b> The "same build we'd sell to Medtronic" logic rests on DHF / 21 CFR Part 11 / computer-system validation — a higher bar than audit logs. Ask directly whether Airia supports it; the answer validates or undercuts the whole resale case.</p>
+    </div>
+    <div class="flag">
+      <h5>Strategic flag · stay portable</h5>
+      <p><b>Concentration risk on a 2024 startup is real — but we've hedged it.</b> Keep the <b>system of record and live state in our own Supabase/SharePoint</b>, outside Airia, so the engines stay replaceable even if Airia later isn't the right home.</p>
+    </div>
+  </div>
+
+</div>
+
+</body></html>
