@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trinzo — Back-Office Control Surface</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#01163B; --navy-soft:#1b2f55; --turq:#17D0C4; --turq-tint:#e3faf8;
+    --slate:#607382; --grey:#E0E3E7; --grey-tint:#f3f5f7;
+    --ink:#0c1320; --ink-soft:#3d4654; --ink-faint:#7d8794;
+    --green:#198754; --green-tint:#e4f2eb;
+    --amber:#9a6b00; --amber-tint:#f6eed8;
+    --red:#b3261e; --red-tint:#f7e4e2;
+    --navy-tint:#e6eaf1;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#fff;color:var(--ink);font-family:'Roboto',Arial,sans-serif;font-size:14px;line-height:1.5;}
+
+  /* ---------- header ---------- */
+  header{display:flex;align-items:center;gap:20px;padding:12px 26px;background:#fff;border-bottom:3px solid var(--navy);
+    position:sticky;top:0;z-index:30;}
+  header img{height:34px;display:block;}
+  .htag{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--slate);font-weight:700;border-left:1px solid var(--grey);padding-left:18px;}
+  .spacer{flex:1;}
+  .role-note{font-size:11.5px;color:var(--ink-faint);max-width:210px;text-align:right;}
+  .role-switch{display:flex;gap:4px;background:var(--grey-tint);border:1px solid var(--grey);border-radius:8px;padding:4px;}
+  .role-switch button{border:none;background:transparent;font-family:'Roboto',sans-serif;font-size:12.5px;font-weight:500;
+    color:var(--ink-soft);padding:7px 12px;border-radius:6px;cursor:pointer;transition:all .15s;}
+  .role-switch button:hover{color:var(--navy);}
+  .role-switch button.active{background:var(--navy);color:#fff;font-weight:700;}
+
+  /* ---------- layout ---------- */
+  .app{display:flex;min-height:calc(100vh - 62px);}
+  nav.sidebar{width:226px;flex-shrink:0;background:var(--navy);padding:22px 10px;}
+  nav.sidebar .navhead{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#8fa0bd;font-weight:700;padding:0 12px 10px;}
+  nav.sidebar a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;color:#c8d2e2;
+    text-decoration:none;font-weight:500;font-size:13.5px;cursor:pointer;margin-bottom:2px;border-left:3px solid transparent;}
+  nav.sidebar a:hover{background:var(--navy-soft);color:#fff;}
+  nav.sidebar a.active{background:var(--navy-soft);color:#fff;border-left-color:var(--turq);font-weight:700;}
+  nav.sidebar a .badge{margin-left:auto;background:var(--turq);color:var(--navy);font-size:10.5px;font-weight:700;
+    border-radius:9px;padding:1px 7px;min-width:20px;text-align:center;}
+  nav.sidebar .ico{width:16px;text-align:center;opacity:.9;}
+  main{flex:1;padding:26px 32px 60px;max-width:1180px;background:#fff;}
+
+  /* ---------- common ---------- */
+  .pagehead{margin-bottom:20px;}
+  .pagehead h2{font-size:24px;font-weight:700;color:var(--navy);letter-spacing:-.01em;}
+  .pagehead p{color:var(--ink-soft);font-size:13.5px;max-width:780px;margin-top:4px;}
+  .grid{display:grid;gap:14px;}
+  .g2{grid-template-columns:1fr 1fr;}
+  .g3{grid-template-columns:repeat(3,1fr);}
+  .g4{grid-template-columns:repeat(4,1fr);}
+  @media(max-width:980px){.g3,.g4{grid-template-columns:1fr 1fr;}}
+  .card{background:#fff;border:1px solid var(--grey);border-radius:8px;padding:16px 18px;}
+  .card h3{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .chip{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;letter-spacing:.04em;
+    padding:2px 9px;border-radius:10px;text-transform:uppercase;white-space:nowrap;}
+  .chip.extract{background:var(--navy-tint);color:var(--navy);}
+  .chip.draft{background:var(--turq-tint);color:#0b7d76;}
+  .chip.audit{background:var(--amber-tint);color:var(--amber);}
+  .chip.retrieve{background:var(--grey-tint);color:var(--slate);border:1px solid var(--grey);}
+  .chip.green{background:var(--green-tint);color:var(--green);}
+  .chip.amber{background:var(--amber-tint);color:var(--amber);}
+  .chip.red{background:var(--red-tint);color:var(--red);}
+  .chip.neutral{background:var(--grey-tint);color:var(--ink-soft);}
+  .chip.line{background:#fff;color:var(--slate);border:1px solid var(--grey);text-transform:none;letter-spacing:0;font-weight:500;}
+  .meta{font-size:11.5px;color:var(--ink-faint);}
+  .prov{font-size:11px;color:var(--ink-faint);display:flex;gap:12px;flex-wrap:wrap;margin-top:9px;padding-top:8px;border-top:1px dashed var(--grey);}
+  .prov span b{color:var(--ink-soft);font-weight:500;}
+
+  /* ---------- queue items ---------- */
+  .queue-group{margin-bottom:24px;}
+  .queue-group .qhead{display:flex;align-items:baseline;gap:10px;margin-bottom:9px;}
+  .queue-group .qhead h3{font-size:15px;font-weight:700;color:var(--navy);}
+  .queue-group .qhead .count{font-size:12px;color:var(--ink-faint);}
+  .qitem{background:#fff;border:1px solid var(--grey);border-radius:8px;padding:14px 16px;margin-bottom:10px;
+    transition:opacity .4s, transform .4s;}
+  .qitem.flagged{border-left:4px solid var(--red);}
+  .qitem.leaving{opacity:0;transform:translateX(24px);}
+  .qtop{display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap;}
+  .qtitle{font-weight:700;font-size:14px;flex:1;color:var(--ink);min-width:260px;}
+  .qbody{color:var(--ink-soft);font-size:13px;margin-top:5px;max-width:840px;}
+  .qbody .caveat{display:block;margin-top:6px;color:var(--amber);font-weight:700;font-size:12.5px;}
+  .route{margin-top:9px;background:var(--turq-tint);border:1px solid #bfeeea;border-radius:6px;padding:8px 12px;font-size:12.5px;color:var(--ink-soft);}
+  .route b{color:var(--navy);}
+  .qactions{display:flex;gap:8px;margin-top:11px;flex-wrap:wrap;align-items:center;}
+  .btn{font-family:'Roboto',sans-serif;font-size:12.5px;font-weight:700;border-radius:6px;padding:7px 15px;cursor:pointer;border:1px solid transparent;transition:all .15s;}
+  .btn.approve{background:var(--navy);color:#fff;}
+  .btn.approve:hover{background:var(--navy-soft);}
+  .btn.assign{background:var(--turq);color:var(--navy);}
+  .btn.assign:hover{background:#12b5ab;}
+  .btn.ghost{background:#fff;border-color:var(--grey);color:var(--ink-soft);}
+  .btn.ghost:hover{border-color:var(--slate);color:var(--ink);}
+  .btn.danger{background:#fff;border-color:var(--red);color:var(--red);}
+  .btn.danger:hover{background:var(--red-tint);}
+  .btn:disabled{opacity:.45;cursor:default;}
+  select.assign-sel{font-family:'Roboto',sans-serif;font-size:12.5px;border:1px solid var(--grey);border-radius:6px;padding:7px 9px;color:var(--ink-soft);background:#fff;cursor:pointer;}
+  .editbox{display:none;margin-top:10px;}
+  .editbox.open{display:block;}
+  .editbox textarea, .wb textarea{width:100%;min-height:80px;border:1px solid var(--grey);border-radius:6px;background:#fff;
+    font-family:'Roboto',sans-serif;font-size:13px;padding:10px;color:var(--ink);resize:vertical;}
+  .editbox .row{display:flex;gap:8px;margin-top:8px;}
+  .empty{border:1.5px dashed var(--grey);border-radius:8px;padding:26px;text-align:center;color:var(--ink-faint);font-size:13px;}
+
+  /* ---------- filters ---------- */
+  .filterbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;}
+  .filterbar button{font-family:'Roboto',sans-serif;font-size:12px;font-weight:500;border:1px solid var(--grey);background:#fff;
+    color:var(--ink-soft);border-radius:14px;padding:5px 13px;cursor:pointer;}
+  .filterbar button.active{background:var(--navy);border-color:var(--navy);color:#fff;font-weight:700;}
+
+  /* ---------- stats ---------- */
+  .stat{background:#fff;border:1px solid var(--grey);border-radius:8px;padding:14px 16px;border-top:3px solid var(--navy);}
+  .stat.t{border-top-color:var(--turq);}
+  .stat .label{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--slate);font-weight:700;}
+  .stat .value{font-size:28px;font-weight:700;color:var(--navy);margin-top:3px;line-height:1.1;}
+  .stat .sub{font-size:11.5px;color:var(--ink-soft);margin-top:3px;}
+  .stat .fresh{font-size:10.5px;color:var(--ink-faint);margin-top:6px;border-top:1px dashed var(--grey);padding-top:5px;}
+
+  /* ---------- tables ---------- */
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  th{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--navy);font-weight:700;text-align:left;padding:8px 10px;}
+  td{padding:8px 10px;border-bottom:1px solid var(--grey);vertical-align:top;color:var(--ink-soft);}
+  tr:nth-child(even) td{background:var(--grey-tint);}
+  td:first-child{color:var(--ink);font-weight:500;}
+
+  /* ---------- triggers ---------- */
+  .trig{display:flex;align-items:flex-start;gap:14px;background:#fff;border:1px solid var(--grey);border-radius:8px;padding:15px 17px;margin-bottom:10px;}
+  .trig .dot{width:10px;height:10px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+  .dot.live{background:var(--green);box-shadow:0 0 0 3px var(--green-tint);}
+  .dot.sched{background:var(--amber);box-shadow:0 0 0 3px var(--amber-tint);}
+  .dot.manual{background:var(--slate);box-shadow:0 0 0 3px var(--grey-tint);}
+  .dot.flight{background:var(--turq);box-shadow:0 0 0 3px var(--turq-tint);animation:pulse 1s ease infinite;}
+  @keyframes pulse{50%{opacity:.4;}}
+  .trig .body{flex:1;}
+  .trig .name{font-weight:700;font-size:14px;color:var(--navy);}
+  .trig .cond{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+  .trig .last{font-size:11.5px;color:var(--ink-faint);margin-top:5px;}
+
+  /* ---------- bars ---------- */
+  .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;}
+  .bar-row .bl{width:150px;font-size:12px;font-weight:500;color:var(--ink-soft);flex-shrink:0;}
+  .bar-row .track{flex:1;height:13px;background:var(--grey-tint);border-radius:3px;overflow:hidden;}
+  .bar-row .fill{height:100%;border-radius:3px;}
+  .bar-row .bv{width:90px;font-size:11.5px;color:var(--ink-faint);text-align:right;flex-shrink:0;}
+
+  /* ---------- workbench ---------- */
+  .wb{margin-bottom:16px;}
+  .wb .wbhead{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .wb .wbhead h3{font-size:16px;font-weight:700;color:var(--navy);}
+  .wb input[type=text], .wb select{font-family:'Roboto',sans-serif;font-size:13px;border:1px solid var(--grey);border-radius:6px;padding:9px 11px;color:var(--ink);width:100%;background:#fff;}
+  .wb .row{display:flex;gap:10px;margin-top:10px;align-items:center;flex-wrap:wrap;}
+  .answer{margin-top:12px;background:var(--grey-tint);border:1px solid var(--grey);border-radius:6px;padding:14px 16px;font-size:13px;color:var(--ink-soft);display:none;}
+  .answer.show{display:block;}
+  .answer .cite{display:inline-block;background:#fff;border:1px solid var(--grey);border-radius:4px;font-size:11px;padding:1px 7px;color:var(--navy);font-weight:500;margin:2px 3px 0 0;}
+
+  .ragproj{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px dashed var(--grey);}
+  .ragproj:last-child{border-bottom:none;}
+  .ragproj .pname{font-weight:700;width:120px;flex-shrink:0;color:var(--ink);}
+  .ragproj .pdetail{flex:1;font-size:12.5px;color:var(--ink-soft);}
+
+  /* ---------- process chains ---------- */
+  .chain{background:#fff;border:1px solid var(--grey);border-radius:8px;padding:16px 18px;margin-bottom:14px;}
+  .chain .chead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+  .chain .chead h3{font-size:15px;font-weight:700;color:var(--navy);}
+  .chain .chead .inst{font-size:12.5px;color:var(--ink-soft);}
+  .steps{display:flex;flex-wrap:wrap;gap:6px;}
+  .step{flex:1;min-width:128px;max-width:230px;border:1px solid var(--grey);border-radius:6px;padding:8px 10px;background:var(--grey-tint);}
+  .step.done{background:var(--green-tint);border-color:#b7d8c4;}
+  .step.active{background:var(--turq-tint);border-color:var(--turq);}
+  .step.blocked{background:var(--red-tint);border-color:var(--red);}
+  .step .smark{float:right;font-size:11px;font-weight:700;color:var(--ink-faint);}
+  .step.done .smark{color:var(--green);}
+  .step.active .smark{color:#0b7d76;}
+  .step.blocked .smark{color:var(--red);}
+  .step .sname{font-size:11.5px;font-weight:700;color:var(--ink);line-height:1.3;}
+  .step .sown{font-size:10.5px;color:var(--ink-faint);margin-top:3px;}
+  .step .snote{font-size:10.5px;color:var(--ink-soft);margin-top:3px;font-style:italic;}
+  .gatebar{margin-top:11px;font-size:11.5px;color:var(--ink-soft);background:var(--grey-tint);border-left:3px solid var(--navy);padding:7px 11px;border-radius:0 4px 4px 0;}
+
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--navy);color:#fff;
+    padding:11px 22px;border-radius:8px;font-size:13px;font-weight:500;opacity:0;transition:all .3s;z-index:50;box-shadow:0 12px 30px -10px rgba(1,22,59,.5);}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .footer-note{margin-top:36px;font-size:11px;color:var(--ink-faint);border-top:1px solid var(--grey);padding-top:12px;}
+  .checkrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--grey);}
+  .checkrow:last-child{border-bottom:none;}
+  .checkrow .tick{width:7px;height:7px;border-radius:50%;background:var(--turq);flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<header>
+  <img src="data:image/png;base64,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" alt="Trinzo">
+  <span class="htag">Back-office control surface</span>
+  <div class="spacer"></div>
+  <div class="role-note" id="roleNote"></div>
+  <div class="role-switch" id="roleSwitch"></div>
+</header>
+
+<div class="app">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main id="view"></main>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* =====================================================================
+   Trinzo back-office control surface, v2.
+   Brand: #01163B primary, #17D0C4 accent, Roboto, white background.
+   All data is mock; state is in-memory (refresh resets the demo).
+   ===================================================================== */
+
+const PEOPLE = {
+  coordinator:{ name:"Aoife",  fn:"AI Hub Coordinator", note:"Super-operator: sees every queue" },
+  sales:      { name:"Conor",  fn:"Sales & Marketing",  note:"Pipeline, proposals, content" },
+  talent:     { name:"Maeve",  fn:"Talent / Resourcing", note:"Matching, bench, contractors" },
+  delivery:   { name:"Sarah",  fn:"Client Delivery",    note:"Projects, RAG, SOPs" },
+  finance:    { name:"Liam",   fn:"Finance",            note:"Margin, EI grant, invoices" },
+  exec:       { name:"Adelin", fn:"Leadership",         note:"KPIs, sign-offs, portfolio" },
+};
+
+const LINES = ["QA/RA","Staffing","Training","AI","Margin Improvement"];
+
+const NAV = [
+  { id:"today",     label:"Today",                ico:"●", roles:["coordinator","sales","talent","delivery","finance","exec"] },
+  { id:"approvals", label:"Approval queues",      ico:"✓", roles:["coordinator","sales","talent","delivery","finance","exec"], badge:qCount },
+  { id:"chains",    label:"Process chains",       ico:"⛓", roles:["coordinator","sales","talent","delivery","finance","exec"], badge:blockedCount },
+  { id:"workbench", label:"Workbench",            ico:"◆", roles:["coordinator","sales","talent","delivery","finance","exec"] },
+  { id:"kpis",      label:"KPIs & reports",       ico:"▦", roles:["coordinator","sales","talent","delivery","finance","exec"] },
+  { id:"triggers",  label:"Workflows & triggers", ico:"⚡", roles:["coordinator"] },
+  { id:"provenance",label:"Provenance & cost",    ico:"❖", roles:["coordinator","finance","exec"] },
+  { id:"engines",   label:"Engine configuration", ico:"⚙", roles:["coordinator"] },
+];
+
+const state = { role:"coordinator", page:"today", lineFilter:"All", cleared:0, minutesSaved:0 };
+
+/* ---------------- queue items ----------------
+   approver: which person's queue it sits in now.
+   next: agent-suggested routing { to, reason }.
+   trail: handoff history. mins: estimated minutes saved on resolution. */
+let ITEMS = [
+  /* --- Sales & Marketing (Conor) --- */
+  { id:"sw1", approver:"sales", line:"QA/RA", engine:"Draft", model:"Sonnet", tokens:"11.2k", ts:"Today 08:10", mins:90,
+    group:"Proposals & SOWs",
+    title:"SOW draft: MedDev QA remediation, Phase 1",
+    body:"Drafted from the discovery call transcript and the QA/RA rate card. 6-week engagement, 2 consultants, fixed fee with change-control clause. Generated in the branded Word template, ready to edit.",
+    next:{ to:"finance", reason:"margin check against the QA/RA rate card before issue" },
+    trail:["Draft engine → Conor"] },
+  { id:"crm1", approver:"sales", line:"AI", engine:"Extract", model:"Haiku", tokens:"2.1k", ts:"Today 07:45", mins:20,
+    group:"CRM hygiene",
+    title:"3 pipeline updates extracted from this week's email threads",
+    body:"Acme Pharma: moved to proposal stage (email Tue). NovaMed: decision pushed to July (email Wed). Brightcare: new stakeholder added, Head of Quality. Approving writes the changes to the CRM.",
+    trail:["Extract engine → Conor"] },
+  { id:"em1", approver:"sales", line:"Training", engine:"Draft", model:"Sonnet", tokens:"1.4k", ts:"Today 08:55", mins:15,
+    group:"Client communications",
+    title:"Follow-up email: GxP training enquiry, Thornfield Bio",
+    body:"Drafted reply summarising the two training options discussed, with indicative pricing and next-step CTA. Tone matched to previous thread.",
+    trail:["Draft engine → Conor"] },
+  { id:"li1", approver:"sales", line:"AI", engine:"Draft", model:"Sonnet", tokens:"3.6k", ts:"Yesterday 16:20", mins:35,
+    group:"Content distribution",
+    title:"LinkedIn post: 'Why your first AI agent should audit, not act'",
+    body:"From last week's webinar. Suggested publish: Thursday 08:30. Nothing auto-publishes; scheduling happens only on your approval.",
+    trail:["Draft engine → Conor"] },
+  { id:"lu1", approver:"sales", line:"AI", engine:"Retrieve", model:"Sonnet", tokens:"6.4k", ts:"Today 07:20", mins:60,
+    group:"Pre-sales triage (LUCE)",
+    title:"Pre-Sales Context Brief: NovaMed — review within 24h SLA",
+    body:"LUCE scraped public regulatory history: 1 FDA 483 (2024, design controls), no warning letters, eQMS is TrackWise. Likely trigger: CAPA backlog. Provisional mapping: Track A Discovery Workshop. Brief attached per SOP-AIS-002 Stage 1.",
+    caveat:"Gate: leads that are pure technology implementation (no adoption, training or GxP component) are out of scope; flag to leadership instead.",
+    trail:["LUCE (Retrieve + Extract) → Conor"],
+    actions:["Mark reviewed: proceed to qualification","Out of scope: flag to leadership"] },
+  { id:"pq1", approver:"sales", line:"Training", engine:"Audit", model:"Sonnet", tokens:"4.9k", ts:"Today 09:10", mins:30,
+    group:"Proposals & SOWs",
+    title:"Proposal QC: Thornfield Bio draft fails 2 of 10 checklist items",
+    body:"Per the SOP-AIS-002 quality checklist: executive summary does not open with verbatim client language, and next steps lack a named owner and date. Day 4 of the 5-day conversion window. Suggested fixes drafted inline.",
+    trail:["Audit engine → Conor"],
+    actions:["Apply fixes & approve for issue"] },
+  { id:"rr1", approver:"sales", line:"AI", engine:"Audit", model:"Haiku", tokens:"0.7k", ts:"Today 06:30", mins:20,
+    group:"Account expansion (30-60-90)",
+    title:"Retainer alert: Adoption Management tranche 81% consumed (12.2 of 15h)",
+    body:"Usage summary drafted per SOP section 8.2. Renewal conversation must happen before the tranche expires on 27 June; do not let it lapse. Day-60 value data pack assembled to anchor the conversation.",
+    next:{ to:"exec", reason:"renewal recommendation needs the Head of Innovation view before the client call" },
+    trail:["Audit engine → Conor"] },
+
+  /* --- Talent / Resourcing (Maeve) --- */
+  { id:"tm1", approver:"talent", line:"Staffing", engine:"Retrieve", model:"Sonnet", tokens:"5.3k", ts:"Today 08:30", mins:45,
+    group:"Resource matching",
+    title:"Candidate match: Senior QA consultant → MedDev backfill (87% fit)",
+    body:"Matched on ISO 13485 lead-auditor experience, medical-device QMS background, and availability from 1 July. Two weaker alternatives (74%, 69%) held in reserve. Shortlisting notifies the candidate manager.",
+    next:{ to:"delivery", reason:"confirm technical fit against the project's validation workload" },
+    trail:["Retrieve engine → Maeve"],
+    actions:["Shortlist"] },
+  { id:"tb1", approver:"talent", line:"Staffing", engine:"Audit", model:"Haiku", tokens:"0.9k", ts:"Today 07:00", mins:10,
+    group:"Bench & utilisation",
+    title:"Bench alert: consultant rolling off Brightcare in 2 weeks",
+    body:"No onward assignment recorded. Utilisation drops to 71% if unplaced by 24 June. Suggested action: route to Sales as a sell-on opportunity with the QA/RA capability sheet attached.",
+    next:{ to:"sales", reason:"sell-on opportunity, client has open audit-readiness work" },
+    trail:["Audit engine → Maeve"] },
+  { id:"tc1", approver:"talent", line:"AI", engine:"Draft", model:"Sonnet", tokens:"3.1k", ts:"Today 08:05", mins:30,
+    group:"Contractor briefs & SLAs",
+    title:"Sprint 14 brief: AI Engineer (LUCE ingestion pipeline)",
+    body:"Drafted from the approved Asana spec. Deliverables: ingestion connector, unit tests, handover note. SLA: 10 working days from acceptance. Add context before sending.",
+    trail:["Draft engine → Maeve"] },
+
+  /* --- Client Delivery (Sarah) --- */
+  { id:"da1", approver:"delivery", line:"QA/RA", engine:"Extract", model:"Haiku → Sonnet", tokens:"4.2k", ts:"Today 09:42", mins:25,
+    group:"Meeting actions: Client sync, ARIA delivery (Mon 09:30)",
+    title:"Send updated validation protocol to Medtronic QA contact",
+    body:"Owner (tentative): Sarah. Due Thu 12 Jun. Extracted from transcript at 00:14:22: 'Sarah to circulate v3 of the protocol before Thursday's QA review.'",
+    trail:["Extract engine → Sarah"] },
+  { id:"da2", approver:"delivery", line:"QA/RA", engine:"Extract", model:"Haiku → Sonnet", tokens:"4.2k", ts:"Today 09:42", mins:25,
+    group:"Meeting actions: Client sync, ARIA delivery (Mon 09:30)",
+    title:"Book ARIA UAT session with client delivery team",
+    body:"Due Fri 13 Jun. Transcript 00:31:05: client asked for UAT 'before the end of next week'. Approving creates the Asana task.",
+    trail:["Extract engine → Sarah"] },
+  { id:"da3", approver:"delivery", line:"QA/RA", engine:"Extract", model:"Haiku → Sonnet", tokens:"4.2k", ts:"Today 09:42", mins:25,
+    group:"Meeting actions: Client sync, ARIA delivery (Mon 09:30)",
+    title:"Confirm consultant availability for sprint 14 regression run",
+    body:"Resourcing question raised at 00:38. The agent suggests routing this to Talent rather than holding it in Delivery.",
+    next:{ to:"talent", reason:"availability and allocation sit with Resourcing" },
+    trail:["Extract engine → Sarah"] },
+  { id:"dr1", approver:"delivery", line:"AI", engine:"Draft", model:"Sonnet", tokens:"12.4k", ts:"Today 08:00", mins:170, rag:true,
+    group:"Status reporting",
+    title:"Bi-weekly RAG status report: ARIA · LUCE · Audit Tool",
+    next:{ to:"exec", reason:"distribution to leadership once commentary is added" },
+    trail:["Draft engine → Sarah"] },
+  { id:"ds1", approver:"delivery", line:"QA/RA", engine:"Audit", model:"Sonnet", tokens:"6.7k", ts:"Yesterday 17:30", mins:40,
+    group:"Document review results",
+    title:"SOP-014 review: 2 clauses out of date against the QMS template",
+    body:"Clause 4.2 references a retired form ID; clause 7.1 predates the 2025 template revision. Redlined draft attached. Approving logs the review; the revision itself needs an owner.",
+    next:{ to:"coordinator", reason:"schedule the SOP revision into the next admin sprint" },
+    trail:["Audit engine → Sarah"] },
+  { id:"cf1", approver:"delivery", line:"Training", engine:"Audit", model:"Haiku", tokens:"0.5k", ts:"Today 06:00", mins:10, flagged:true,
+    group:"Content freeze watch (SOP-TC-001)",
+    title:"Content freeze in 2 days: Olympus training deck not yet locked",
+    body:"Delivery is Mon 23 Jun; freeze deadline is Mon 16 Jun for the 5-day GxP SME review window. Phase 1 content is still in adversarial round 2. Options: accelerate SME review or move delivery.",
+    caveat:"SOP rule: no unvalidated AI-generated content reaches a regulated client under deadline pressure. The freeze is non-negotiable without HoI + GxP SME approval.",
+    trail:["Audit engine → Sarah"],
+    actions:["Accelerate SME review","Propose new delivery date"] },
+  { id:"sm1", approver:"delivery", line:"Training", engine:"Audit", model:"Sonnet", tokens:"5.2k", ts:"Yesterday 15:40", mins:55,
+    group:"Content freeze watch (SOP-TC-001)",
+    title:"SME feedback triaged: 14 comments → 9 valid, 3 marginal, 2 invalid",
+    body:"Adversarial-review framework applied per SOP-TC-001 step 1.4. Valid items applied to the draft; marginal items logged; invalid items documented with reasons (2 already addressed in clause 4). Quality score moves 7.9 → 8.4 if approved.",
+    trail:["Audit engine → Sarah"],
+    actions:["Accept triage & apply"] },
+
+  /* --- Finance (Liam) --- */
+  { id:"fe1", approver:"finance", line:"AI", engine:"Audit", model:"Sonnet + Opus", tokens:"7.8k", ts:"Yesterday 17:00", mins:15, ei:true,
+    group:"EI grant compliance (two-signer rule)",
+    title:"EI log entry: WP-2 retrieval architecture design session",
+    body:"Design session on embedding-store evaluation for the Audit Tool. Decision recorded to prototype hybrid search. Evidence: transcript + decision note (SharePoint). Confidence: high.",
+    next:{ to:"exec", reason:"PI sign-off for technical accuracy (second signer)" },
+    trail:["Extract + Audit engines → Liam"],
+    actions:["Verify (completeness)"] },
+  { id:"fe2", approver:"finance", line:"AI", engine:"Audit", model:"Sonnet + Opus", tokens:"7.8k", ts:"Yesterday 17:00", mins:15, ei:true, flagged:true,
+    group:"EI grant compliance (two-signer rule)",
+    title:"EI log entry: WP-3 data pipeline, evidence missing",
+    body:"R&D discussion detected in a monitored channel referencing 'new chunking approach', but no evidence file was linked within 24 hours. Confidence: low. Held back from the log until evidence is attached.",
+    caveat:"Poka-yoke: this entry cannot reach the EI log without an evidence URL.",
+    trail:["Extract + Audit engines → Liam"],
+    actions:["Request evidence","Mark non-qualifying"] },
+  { id:"fm1", approver:"finance", line:"Margin Improvement", engine:"Audit", model:"Sonnet", tokens:"3.4k", ts:"Today 06:30", mins:30,
+    group:"Margin watch",
+    title:"Margin alert: Training engagement TR-204 at 18%, below the 25% floor",
+    body:"Driver: two unbilled scope additions in May plus a contractor rate increase. The agent drafted a pricing-review note with three options. Decision needed on repricing vs absorbing.",
+    next:{ to:"sales", reason:"pricing review with the client owner" },
+    trail:["Audit engine → Liam"] },
+  { id:"fi1", approver:"finance", line:"Staffing", engine:"Audit", model:"Sonnet", tokens:"1.8k", ts:"Today 06:30", mins:20, flagged:true,
+    group:"Invoices & SLAs",
+    title:"Invoice mismatch flag: contractor invoice exceeds tracked deliverables",
+    body:"Invoice references 12 days; SLA tracker shows 9 days of accepted deliverables. Invoice parsing is Phase 2, so this is a timeline-based flag only. Payment decisions are never automated.",
+    trail:["Audit engine → Liam"],
+    actions:["Query with contractor","Accept variance"] },
+  { id:"xi1", approver:"finance", line:"QA/RA", engine:"Audit", model:"Haiku + Sonnet", tokens:"9.3k", ts:"Today 06:30", mins:120,
+    group:"Month-end close",
+    title:"Xero invoice drafts ready: 4 of 5 projects reconciled clean",
+    body:"Three-way match complete (PSOHub vs invoicing Excel vs burn sheets). 4 projects match exactly; drafts saved in Xero with names removed and same-rate roles merged per the AR process. 1 mismatch: ARIA shows 6h variance against the burn sheet.",
+    next:{ to:"delivery", reason:"investigate the 6h ARIA variance with the PM before the invoice is issued" },
+    trail:["Audit engine → Liam"],
+    actions:["Approve 4 clean drafts"] },
+
+  /* --- Coordinator (Aoife) --- */
+  { id:"co1", approver:"coordinator", line:"QA/RA", engine:"Extract", model:"Haiku", tokens:"0.3k", ts:"Today 10:15", mins:5, flagged:true,
+    group:"System flags",
+    title:"Incomplete transcript: LUCE stand-up not processed",
+    body:"Transcript was 312 words (threshold: 500). Per the failure-mode register, no partial actions were extracted. Options: chase a re-upload or mark the meeting as no-actions.",
+    trail:["Extract engine → Aoife"],
+    actions:["Mark no-actions","Awaiting re-upload"] },
+];
+
+let CORRECTIONS = [
+  { date:"Fri 6 Jun", agent:"Content Flywheel", type:"Tone edit before approval", by:"Conor",
+    detail:"LinkedIn draft used 'revolutionary'; softened to match brand voice. Third occurrence: candidate for prompt update." },
+  { date:"Thu 5 Jun", agent:"Meeting Orchestrator", type:"Wrong owner assigned", by:"Sarah",
+    detail:"Action assigned to Sarah; correct owner was the contractor. Speaker-attribution ambiguity in transcript." },
+  { date:"Tue 3 Jun", agent:"RAG Generator", type:"Status overridden after approval", by:"Sarah",
+    detail:"LUCE marked Green by the agent; corrected to Amber. Client-side dependency not visible in Asana." },
+];
+
+let HANDOFFS = [
+  { date:"Mon 9 Jun", item:"SOW: Brightcare audit readiness", from:"Conor", to:"Liam", reason:"margin check", outcome:"approved same day" },
+  { date:"Fri 6 Jun", item:"Candidate match: validation engineer", from:"Maeve", to:"Sarah", reason:"technical fit", outcome:"shortlisted" },
+];
+
+/* ---------------- process chains ----------------
+   Multi-step processes from the mapped SOPs. Steps carry owner labels
+   (people, agents, or functions like IT/TA) without needing new roles.
+   s: done | active | blocked | pending */
+let CHAINS = [
+  { id:"ch1", name:"Sales pipeline — AI Adoption", src:"SOP-AIS-002 · 8-stage lifecycle", line:"AI",
+    instance:"NovaMed · Discovery Workshop (Track A)",
+    steps:[
+      {n:"Lead intake + LUCE brief", o:"LUCE → Conor", s:"done", note:"brief reviewed in 18h (24h SLA)"},
+      {n:"Qualification note", o:"Conor", s:"done", note:"internal 1-pager, never shared"},
+      {n:"Discovery call", o:"Conor + Sarah", s:"done", note:"notes distributed in 22h"},
+      {n:"Proposal", o:"Draft engine → Conor", s:"active", note:"day 3 of 5-day conversion window"},
+      {n:"SOW (ARIA draft)", o:"ARIA → Conor", s:"pending", note:"Track A fixed-price template"},
+      {n:"Signed → onboarding chain", o:"Sarah", s:"pending", note:"fires chain below on signature"}],
+    gate:"Gates from the SOP: proposals issued within 5 working days of discovery convert at roughly double the rate. CEO approval required above €150K. Track B adds technical architecture review and the 30/40/30 milestone structure."},
+  { id:"ch2", name:"SOW-signed onboarding", src:"PM maps + mural workshop", line:"QA/RA",
+    instance:"MedDev QA remediation · SOW-2026-041",
+    steps:[
+      {n:"SOW breakdown", o:"Extract engine → Sarah", s:"active", note:"6h elapsed · 24h SLA"},
+      {n:"Breakdown → Finance", o:"Sarah → Liam", s:"pending"},
+      {n:"Employee account creation", o:"CD + Fin + IT + TA", s:"blocked", note:"waiting on IT access since Mon"},
+      {n:"PSOHub project setup", o:"Sarah", s:"pending", note:"Salesforce integration pre-fills"},
+      {n:"PSOHub employee setup", o:"Sarah", s:"pending"},
+      {n:"Client SharePoint", o:"Sarah", s:"done", note:"sites + folders in 10 min"},
+      {n:"Burn sheet", o:"Agent → Sarah", s:"pending", note:"pre-filled from SOW + Region Cal"},
+      {n:"Expense sheet", o:"Sarah", s:"pending", note:"per consultant, from SOW value"}],
+    gate:"Lesson encoded from the maps: IT onboarding is always the critical path, not the project work. A blocked step alerts its owner and the Coordinator automatically."},
+  { id:"ch3", name:"Month-end close", src:"Delivery + Finance maps · gated", line:"Cross-line",
+    instance:"May 2026 · all active projects",
+    steps:[
+      {n:"Month-end reminder", o:"Agent → PSOHub users", s:"done"},
+      {n:"Time entry approvals", o:"Sarah (PM)", s:"active", note:"3 projects pending lines"},
+      {n:"Burn sheet updates", o:"Agent → Sarah", s:"pending", note:"approved hours auto-drafted"},
+      {n:"Export → invoicing template", o:"Agent", s:"pending"},
+      {n:"Three-way hours match", o:"Audit engine → Liam", s:"pending", note:"PSOHub vs Excel vs burn sheet"},
+      {n:"Xero invoice drafts", o:"Agent → Liam", s:"pending", note:"names removed, same-rate roles merged"},
+      {n:"CD review", o:"Liam → Sarah", s:"pending"},
+      {n:"Submit to client", o:"Liam", s:"pending", note:"human send, always"}],
+    gate:"Gate from the maps: Finance starts only when PM Approved is set. The agent runs every reconciliation and queues exceptions only; matches pass through silently."},
+  { id:"ch4", name:"Training content production", src:"SOP-TC-001 · phase-gated", line:"Training",
+    instance:"Olympus FDA compliance programme",
+    steps:[
+      {n:"Phase 0: brief + research", o:"AI team", s:"done", note:"project plan signed"},
+      {n:"Phase 1: content drafts", o:"Claude → team", s:"active", note:"adversarial round 2 · quality 5.8 → 7.9"},
+      {n:"Human verification gate", o:"Instructional designer", s:"pending", note:"regulatory facts vs primary sources"},
+      {n:"SME sign-off: content", o:"GxP SME", s:"pending"},
+      {n:"Phase 2: slides (Gamma)", o:"Claude → team", s:"pending"},
+      {n:"Phase 3: assessments", o:"Claude → SME", s:"pending", note:"constrained by LMS capability"},
+      {n:"Phase 5a: SCORM / LMS", o:"AI team", s:"pending", note:"SCORM 1.2 confirmed at brief"},
+      {n:"Final assembly + sign-off", o:"PM", s:"pending", note:"bracket scan + AI disclosure"}],
+    gate:"Content freeze: all decks lock 5 business days before delivery for the GxP SME window. The dashboard counts down to each freeze and flags at-risk programmes."},
+  { id:"ch5", name:"Marketing flywheel", src:"Mural workshop · Sales & Marketing", line:"AI",
+    instance:"Case study: pharma Copilot programme",
+    steps:[
+      {n:"Engagement closed", o:"Sarah", s:"done", note:"CSAT 4.8 · day-30 call booked"},
+      {n:"Permission asked at close", o:"Sarah", s:"done", note:"the highest-converting moment"},
+      {n:"Case study draft", o:"Draft engine → Conor", s:"active", note:"Problem → Approach → Outcome → quote"},
+      {n:"Client approval", o:"PM + client", s:"pending"},
+      {n:"Derivatives: posts + newsletter", o:"Agent → Conor", s:"pending", note:"flywheel topping reused"},
+      {n:"Publish + sales enablement", o:"Conor", s:"pending", note:"feeds proposal library + reference list"}],
+    gate:"Per the workshop's Sales & Marketing map (marketing operations: branding, lead generation, market positioning) and the Revenue SOP: every close feeds marketing, every asset feeds Lead to Opportunity. Nothing auto-publishes."},
+  { id:"ch6", name:"Recruiting: requirement → offer", src:"Mural workshop · Talent & Acquisition", line:"Staffing",
+    instance:"Senior QA consultant · MedDev backfill",
+    steps:[
+      {n:"Sales reach-out with requirements", o:"Conor → Maeve", s:"done"},
+      {n:"Assess internal / previous hires", o:"Retrieve engine → Maeve", s:"done", note:"match engine scores the bench first"},
+      {n:"Place advert if needed", o:"Maeve", s:"done", note:"skipped: 87% internal match found"},
+      {n:"Scoping call + assessment / NDA", o:"Maeve", s:"active"},
+      {n:"First round interviews", o:"Maeve", s:"pending"},
+      {n:"Technical interviews", o:"Sarah + SME", s:"pending"},
+      {n:"Reference checks", o:"Agent → Maeve", s:"pending", note:"requests drafted automatically"},
+      {n:"Client CV review / interview", o:"Client", s:"pending"},
+      {n:"Verbal offer + contract draft", o:"Maeve + Legal", s:"pending", note:"contract drafted from template"}],
+    gate:"From the workshop map: every drafting step (adverts, assessments, reference requests, contracts) is an engine topping. Decisions to advance a candidate stay human, always."},
+];
+
+/* ---------------- role workspace data ----------------
+   What each role watches daily. All mock; refresh resets. */
+let PIPELINE = [
+  { opp:"Brightcare: audit-readiness expansion", line:"QA/RA", stage:"Lead", value:"€45K", next:"LUCE brief generating", src:"Delivery referral (Sarah, today)" },
+  { opp:"Acme Pharma: POC Factory", line:"AI", stage:"Qualified", value:"€200K", next:"Schedule discovery call this week" },
+  { opp:"NovaMed: Discovery Workshop", line:"AI", stage:"Proposal", value:"€30K", next:"Issue proposal: day 3 of 5-day window" },
+  { opp:"Thornfield Bio: GxP training", line:"Training", stage:"Proposal", value:"€30K", next:"Fix 2 QC findings: day 4 of 5" },
+  { opp:"MedDev: QA remediation Ph1", line:"QA/RA", stage:"SOW", value:"€86K", next:"Margin check with Liam, then issue" },
+];
+const STAGECHIP = { Lead:"neutral", Qualified:"retrieve", Discovery:"draft", Proposal:"draft", SOW:"amber", Signed:"green" };
+
+const BENCH = [
+  { name:"Senior QA consultant (M.K.)", rate:"Senior band · €760/day", avail:"Now", match:"87% → MedDev backfill, awaiting Sarah's fit check", state:"matched" },
+  { name:"Validation engineer (D.O.)", rate:"Mid band · €640/day", avail:"24 Jun (rolls off Brightcare)", match:"No onward assignment; sell-on routed to Sales", state:"alert" },
+  { name:"AI engineer (contractor)", rate:"Senior band · €820/day", avail:"Committed: sprint 14", match:"LUCE ingestion pipeline", state:"engaged" },
+  { name:"Regulatory SME (S.B.)", rate:"Senior band · €880/day", avail:"50% from July", match:"Soft-held: NovaMed discovery if it signs", state:"soft" },
+];
+const BENCHCHIP = { matched:"green", alert:"red", engaged:"neutral", soft:"amber" };
+
+let PROJECTS = [
+  { p:"ARIA · Medtronic", line:"QA/RA", rag:"green", csat:"4.6/5", note:"UAT w/c 16 Jun; client engaged and happy", opp:"client mentioned a second site needing the same remediation" },
+  { p:"LUCE", line:"AI", rag:"amber", csat:"–", note:"connector behind; sprint 14 starting late" },
+  { p:"Audit Tool", line:"AI", rag:"red", csat:"3.9/5", note:"deliverable past SLA; at-risk account, escalation in motion" },
+  { p:"Olympus training", line:"Training", rag:"amber", csat:"–", note:"content freeze in 2 days; SME window tight", opp:"sponsor asked about a follow-on module for lab analysts" },
+];
+
+const FIN_AR = [
+  ["Current","€96K","72%","green"],
+  ["1–30 days overdue","€54K","41%","amber"],
+  ["31–60 days","€22K","17%","amber"],
+  ["60+ days","€18K","14%","red"],
+];
+const FIN_AP = [
+  ["Consultant invoices reconciled, ready to schedule (Spendesk)","7 · €41K"],
+  ["Bills awaiting divisional approval","3"],
+  ["Payments scheduled Friday (BOI + MoneyCorp)","€38K"],
+  ["Expense claims awaiting review","5"],
+];
+
+const AGENTSTATS = [
+  { a:"Meeting Orchestrator", runs:14, ok:"93%", exc:"1 short transcript held back" },
+  { a:"LUCE Pre-Sales Triage", runs:3, ok:"100%", exc:"none" },
+  { a:"Month-End Orchestrator", runs:1, ok:"in flight", exc:"at step 2 of 8" },
+  { a:"EI Grant Tracker", runs:7, ok:"86%", exc:"1 missing evidence" },
+  { a:"Content Flywheel", runs:2, ok:"100%", exc:"none" },
+  { a:"Resource Match & SLA", runs:5, ok:"100%", exc:"1 bench alert raised" },
+];
+const ADOPTION = [
+  { who:"Sarah (Delivery)", cleared:14, avg:"1.4h", oldest:"3h", ok:true },
+  { who:"Conor (Sales)", cleared:11, avg:"2.1h", oldest:"4h", ok:true },
+  { who:"Liam (Finance)", cleared:9, avg:"3.0h", oldest:"6h", ok:true },
+  { who:"Maeve (Talent)", cleared:4, avg:"9.5h", oldest:"2 days", ok:false, note:"queue ageing: check for blockers or a training need" },
+  { who:"Adelin (Leadership)", cleared:3, avg:"26h", oldest:"3 days", ok:false, note:"sign-offs batch weekly: consider a Friday reminder" },
+];
+
+const COMINGUP = [
+  { when:"Thu 12 Jun", what:"Month-end close: time entry approvals due across 3 projects", who:"Delivery + Finance" },
+  { when:"Mon 16 Jun", what:"Olympus content freeze deadline · bi-weekly RAG report due", who:"Delivery + GxP SME" },
+  { when:"w/c 23 Jun", what:"NovaMed likely signs: onboarding chain fires, Regulatory SME needed at 50%", who:"Delivery + Talent + Finance" },
+  { when:"24 Jun", what:"Validation engineer rolls off Brightcare: sell-on window open", who:"Talent + Sales" },
+  { when:"27 Jun", what:"Adoption Management tranche expires: renewal call must happen first", who:"Sales + Leadership" },
+];
+
+let TRIGGERS = [
+  { id:"t1", agent:"Meeting & Action Orchestrator", mode:"live",
+    cond:"Teams meeting ends AND transcript (.vtt/.docx, ≥500 words) appears in the designated SharePoint folder",
+    last:"Last fired: today 09:42, client sync (ARIA) → 3 draft actions queued to Delivery", canRun:false },
+  { id:"t2", agent:"RAG Status Generator", mode:"sched",
+    cond:"Bi-weekly calendar trigger: Monday 08:00, weeks 1 and 3 of each month",
+    last:"Next scheduled: Mon 16 Jun 08:00. Draft already produced from current data", canRun:true },
+  { id:"t3", agent:"EI Grant Compliance Tracker", mode:"sched",
+    cond:"Daily 17:00, scans previous 24h of activity in the locked list of monitored channels",
+    last:"Last fired: yesterday 17:00 → 2 entries drafted to Finance (1 flagged: missing evidence)", canRun:true },
+  { id:"t4", agent:"Content Distribution Flywheel", mode:"manual",
+    cond:"Manual upload to SharePoint /Content/ToProcess/: video ≤90 min or document ≤20 pages",
+    last:"Last fired: yesterday 16:20, GxP webinar → posts + newsletter queued to Sales & Marketing", canRun:true, runLabel:"Simulate asset upload" },
+  { id:"t5", agent:"Resource Match & SLA Manager", mode:"live",
+    cond:"New role requirement or approved Asana spec → match/brief draft. Weekly Monday scan for bench, SLAs and overdue deliverables",
+    last:"Last fired: today 08:30 → 1 match, 1 bench alert, 1 brief queued to Talent", canRun:false },
+  { id:"t6", agent:"KPI & CRM Sync", mode:"sched",
+    cond:"Daily 06:30: extracts pipeline changes from email/calls, refreshes revenue, margin and utilisation views",
+    last:"Last fired: today 06:30 → 3 CRM updates queued, 2 finance flags raised", canRun:true },
+  { id:"t7", agent:"LUCE Pre-Sales Triage", mode:"live",
+    cond:"New lead created in Salesforce → scrape public regulatory history (FDA letters, 483s, EMA findings) → Context Brief to Sales within minutes; 24h human review SLA",
+    last:"Last fired: today 07:20 → NovaMed brief queued to Sales & Marketing", canRun:false },
+  { id:"t8", agent:"Month-End Close Orchestrator", mode:"sched",
+    cond:"Working day -3 each month: reminder → approvals chase → burn sheet drafts → export → three-way match → Xero drafts. Each gate waits for its human",
+    last:"In progress: May close at step 2 of 8 (time entry approvals)", canRun:true },
+  { id:"t9", agent:"Onboarding Chain (SOW signed)", mode:"live",
+    cond:"SOW signed in Salesforce → fan out 7 setup steps across Delivery, Finance, IT and TA; 24h SLA on SOW breakdown; blocked steps escalate",
+    last:"Last fired: Mon → MedDev chain live, currently blocked on IT access", canRun:false },
+];
+
+const ROUTING = [
+  ["Transcript parsing, extraction, field mapping, CRM updates","Claude Haiku","Fast, cheap, high-volume structured extraction","€"],
+  ["Minutes, emails, posts, briefs, SOW and SOP drafting","Claude Sonnet","Balanced quality and cost for prose generation","€€"],
+  ["Resource matching and ranking","Claude Sonnet","Multi-criteria reasoning over profiles and requirements","€€"],
+  ["EI qualifying decision and classification","Claude Sonnet","Moderate complexity; risk justifies cost","€€"],
+  ["EI cross-reference vs work packages","Claude Opus","Highest accuracy; non-negotiable for audit risk","€€€"],
+  ["RAG and KPI synthesis (multi-source reasoning)","Claude Sonnet","Coherent cross-source reasoning, not just extraction","€€"],
+];
+
+const ENGINES = [
+  { name:"EXTRACT", sub:"unstructured → structured",
+    tops:["Transcript → decisions and action items","Email threads → CRM pipeline updates","SOW PDF → breakdown, contract lines, rates","PSOHub hours → burn sheet drafts","Channel scan → EI candidate events"] },
+  { name:"DRAFT", sub:"structured context → first draft",
+    tops:["Proposals and SOWs (ARIA, branded templates)","Emails, briefs, project plans","Training content drafts (SOP-TC-001)","RAG reports and KPI commentary","Case studies and content derivatives"] },
+  { name:"AUDIT", sub:"check content vs a ruleset",
+    tops:["Three-way match: hours, invoices, burn sheets","Proposal QC vs the 10-point checklist","Content freeze countdown and quality gates","SOW vs rate card (margin floor)","EI evidence gaps · bench alerts"] },
+  { name:"RETRIEVE", sub:"answer from a library",
+    tops:["LUCE pre-sales regulatory briefs","SOP and policy Q&A with citations","Candidate and consultant matching","Rate card and contract lookups"] },
+];
+
+/* ---------------- helpers ---------------- */
+
+function visibleItems(role){
+  const pend = ITEMS.filter(i=>i.status!=="done");
+  return role==="coordinator" ? pend : pend.filter(i=>i.approver===role);
+}
+function qCount(role){ return visibleItems(role).length; }
+function blockedCount(){ return CHAINS.reduce((a,c)=>a+c.steps.filter(s=>s.s==="blocked").length,0); }
+function toast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.classList.add("show");
+  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2800);
+}
+function engineChip(e){ return `<span class="chip ${e.split(" ")[0].toLowerCase()}">${e}</span>`; }
+function provLine(i){
+  const trail = (i.trail||[]).join("  ›  ");
+  return `<div class="prov"><span>engine: <b>${i.engine}</b></span><span>model: <b>${i.model}</b></span>
+    <span>tokens: <b>${i.tokens}</b></span><span>generated: <b>${i.ts}</b></span>
+    <span>trail: <b>${trail}</b></span></div>`;
+}
+
+/* ---------------- actions ---------------- */
+
+function resolveItem(id, verdict, label){
+  const item = ITEMS.find(i=>i.id===id); if(!item) return;
+  const el = document.getElementById("qi-"+id);
+  if(el) el.classList.add("leaving");
+  setTimeout(()=>{
+    item.status="done";
+    state.cleared++; state.minutesSaved += item.mins||10;
+    if(verdict==="rejected"){
+      CORRECTIONS.unshift({ date:"Today", agent:item.engine+" engine", type:"Rejected in queue", by:PEOPLE[state.role].name,
+        detail:`'${item.title}' rejected; logged to Agent_Corrections for the monthly prompt review.` });
+    }
+    render();
+    toast(label || (verdict==="approved" ? "Approved: written to the system of record" : "Rejected: logged to the Correction_Log"));
+  },380);
+}
+
+function assignItem(id, to, viaSuggestion){
+  const item = ITEMS.find(i=>i.id===id); if(!item || !to) return;
+  const fromP = PEOPLE[item.approver], toP = PEOPLE[to];
+  const reason = viaSuggestion && item.next ? item.next.reason : "manual reassignment";
+  item.trail = item.trail||[];
+  item.trail.push(`${fromP.name} → ${toP.name}`);
+  HANDOFFS.unshift({ date:"Today", item:item.title, from:fromP.name, to:toP.name, reason, outcome:"in queue" });
+  item.approver = to;
+  if(viaSuggestion) item.next = null;
+  /* EI special: verify hands to PI with a sign-off action */
+  if(item.ei && to==="exec"){ item.actions = ["PI sign-off (technical accuracy)"]; item.body += " Verified for completeness by Liam."; }
+  const el=document.getElementById("qi-"+id);
+  if(el) el.classList.add("leaving");
+  setTimeout(()=>{ render(); toast(`Assigned to ${toP.name} (${toP.fn}); handoff logged`); },380);
+}
+
+function toggleEdit(id){ document.getElementById("eb-"+id).classList.toggle("open"); }
+function saveEdit(id){
+  const item=ITEMS.find(i=>i.id===id);
+  item.body=document.getElementById("ta-"+id).value; item.edited=true;
+  CORRECTIONS.unshift({ date:"Today", agent:item.engine+" engine", type:"Edited before approval", by:PEOPLE[state.role].name,
+    detail:`'${item.title}' edited in queue; diff captured in Agent_Corrections.` });
+  render(); toast("Edit saved and logged to the Correction_Log");
+}
+
+function customAction(id, label){
+  const item=ITEMS.find(i=>i.id===id);
+  if(item && item.ei && /Verify/.test(label)){ assignItem(id,"exec",true); return; }
+  resolveItem(id,"approved",label+": actioned and logged");
+}
+
+function fireTrigger(id){
+  const t=TRIGGERS.find(x=>x.id===id);
+  t.inFlight=true; render();
+  setTimeout(()=>{
+    t.inFlight=false;
+    t.last="Last fired: just now (manual). Run completed; outputs queued for approval";
+    if(id==="t4"){
+      ITEMS.push({ id:"li9", approver:"sales", line:"AI", engine:"Draft", model:"Sonnet", tokens:"8.1k", ts:"Just now", mins:35,
+        group:"Content distribution", title:"LinkedIn post: 'The audit trail is the product'",
+        body:"New draft generated from the simulated asset upload. Suggested publish: Mon 16 Jun, 08:30.",
+        trail:["Draft engine → Conor"] });
+      toast("Run complete: 1 new draft queued to Sales & Marketing");
+    } else { toast("Run complete: outputs refreshed in the relevant queues"); }
+    render();
+  },2200);
+}
+
+/* workbench */
+function wbAsk(){
+  document.getElementById("wbAnswer").classList.add("show");
+}
+function wbDraft(){
+  const type=document.getElementById("wbType").value;
+  const ctx=document.getElementById("wbCtx").value||"(no extra context)";
+  ITEMS.push({ id:"wb"+Date.now(), approver:state.role, line:document.getElementById("wbLine").value,
+    engine:"Draft", model:"Sonnet", tokens:"~6k", ts:"Just now", mins:30, group:"Workbench drafts",
+    title:`${type} draft ready for review`,
+    body:`Drafted in the branded Word template (Roboto, #01163B styles) from your context: '${ctx.slice(0,140)}'. Review, edit or assign onwards.`,
+    trail:["Draft engine → "+PEOPLE[state.role].name] });
+  render(); toast(type+" drafted and queued for your review");
+  state.page="approvals"; render();
+}
+function wbReview(){
+  const rs=document.getElementById("wbRule").value;
+  ITEMS.push({ id:"wr"+Date.now(), approver:state.role, line:"QA/RA", engine:"Audit", model:"Sonnet", tokens:"~5k",
+    ts:"Just now", mins:40, group:"Document review results", flagged:true,
+    title:`Review result: 2 findings against '${rs}'`,
+    body:"Finding 1: payment terms clause deviates from the standard 30 days. Finding 2: missing change-control annex. Redlined copy attached for review.",
+    trail:["Audit engine → "+PEOPLE[state.role].name] });
+  render(); toast("Review complete: findings queued");
+  state.page="approvals"; render();
+}
+
+/* delivery → sales cross-sell handoff */
+function passToSales(idx){
+  const proj = PROJECTS[idx]; if(!proj || proj.passed) return;
+  proj.passed = true;
+  PIPELINE.unshift({ opp:`${proj.p.split(" ·")[0]}: ${proj.opp.slice(0,40)}…`, line:proj.line, stage:"Lead",
+    value:"TBC", next:"LUCE brief generating", src:`Delivery referral (${PEOPLE[state.role].name}, just now)` });
+  ITEMS.push({ id:"ld"+Date.now(), approver:"sales", line:proj.line, engine:"Extract", model:"Haiku", tokens:"0.8k",
+    ts:"Just now", mins:30, group:"Pre-sales triage (LUCE)",
+    title:`New lead from Delivery: ${proj.p}`,
+    body:`Spotted on the ground: ${proj.opp}. Project context, CSAT (${proj.csat}) and the relevant capability sheet attached. LUCE brief queued.`,
+    trail:[`${PEOPLE[state.role].name} (Delivery) → Conor`] });
+  HANDOFFS.unshift({ date:"Today", item:`Lead: ${proj.p}`, from:PEOPLE[state.role].name, to:"Conor", reason:"opportunity spotted inside a current client", outcome:"in pipeline as Lead" });
+  render(); toast("Lead passed to Sales: pipeline updated, handoff logged");
+}
+
+/* ---------------- rendering ---------------- */
+
+function setRole(r){
+  state.role=r;
+  const allowed=NAV.filter(n=>n.roles.includes(r)).map(n=>n.id);
+  if(!allowed.includes(state.page)) state.page = r==="exec" ? "kpis" : "today";
+  render();
+}
+function setPage(p){ state.page=p; render(); }
+function setLine(l){ state.lineFilter=l; render(); }
+
+function render(){
+  document.getElementById("roleSwitch").innerHTML = Object.entries(PEOPLE).map(([k,v])=>
+    `<button class="${state.role===k?'active':''}" onclick="setRole('${k}')" title="${v.fn}">${v.name}</button>`).join("");
+  const p=PEOPLE[state.role];
+  document.getElementById("roleNote").textContent = `${p.fn}: ${p.note}`;
+
+  document.getElementById("sidebar").innerHTML =
+    `<div class="navhead">Control surface</div>` +
+    NAV.filter(n=>n.roles.includes(state.role)).map(n=>{
+      const b=n.badge?n.badge(state.role):0;
+      return `<a class="${state.page===n.id?'active':''}" onclick="setPage('${n.id}')">
+        <span class="ico">${n.ico}</span>${n.label}${b?`<span class="badge">${b}</span>`:""}</a>`;
+    }).join("");
+
+  document.getElementById("view").innerHTML =
+    ({today:vToday,approvals:vApprovals,chains:vChains,workbench:vWorkbench,kpis:vKPIs,
+      triggers:vTriggers,provenance:vProv,engines:vEngines})[state.page]();
+}
+
+/* ----- process chains view ----- */
+const SMARK = { done:"✓", active:"●", blocked:"⚠", pending:"○" };
+function vChains(){
+  return `
+  <div class="pagehead"><h2>Process chains</h2>
+  <p>Multi-step processes from the mapped SOPs, shown as live chains: each step has an owner, a status and, where the SOP defines one, an SLA. Agents do the steps they can; humans clear the gates. A blocked step alerts its owner and the Coordinator. Step owners can include IT, TA or a client without needing a dashboard seat.</p></div>
+  ${CHAINS.map(c=>{
+    const done=c.steps.filter(s=>s.s==="done").length;
+    const blocked=c.steps.some(s=>s.s==="blocked");
+    return `<div class="chain">
+      <div class="chead">
+        <h3>${c.name}</h3>
+        <span class="chip line">${c.line}</span>
+        <span class="chip neutral">${c.src}</span>
+        ${blocked?'<span class="chip red">blocked</span>':''}
+        <span class="inst" style="margin-left:auto">${c.instance} · ${done}/${c.steps.length} steps done</span>
+      </div>
+      <div class="steps">
+        ${c.steps.map(s=>`<div class="step ${s.s}">
+          <span class="smark">${SMARK[s.s]}</span>
+          <div class="sname">${s.n}</div>
+          <div class="sown">${s.o}</div>
+          ${s.note?`<div class="snote">${s.note}</div>`:""}
+        </div>`).join("")}
+      </div>
+      <div class="gatebar">${c.gate}</div>
+    </div>`;
+  }).join("")}
+  <div class="footer-note">Chains are configurations, not code: trigger + steps + owners + gates. The sales chain instantiates per opportunity, the onboarding chain per signed SOW, the close chain per month, the content chain per programme.</div>`;
+}
+
+/* ----- queue card ----- */
+function assignControls(i){
+  const opts = Object.entries(PEOPLE).filter(([k])=>k!==i.approver)
+    .map(([k,v])=>`<option value="${k}">${v.name} (${v.fn})</option>`).join("");
+  const suggested = i.next ? `<button class="btn assign" onclick="assignItem('${i.id}','${i.next.to}',true)">
+      Assign → ${PEOPLE[i.next.to].name} (${PEOPLE[i.next.to].fn})</button>` : "";
+  return suggested + `<select class="assign-sel" onchange="assignItem('${i.id}',this.value,false)">
+    <option value="">Assign to…</option>${opts}</select>`;
+}
+
+function qcard(i){
+  const custom=(i.actions||[]).map((a,n)=>
+    `<button class="btn ${n===0?'approve':'ghost'}" onclick="customAction('${i.id}','${a}')">${a}</button>`).join("");
+  const std=`<button class="btn approve" onclick="resolveItem('${i.id}','approved')">Approve</button>`;
+  return `<div class="qitem ${i.flagged?'flagged':''}" id="qi-${i.id}">
+    <div class="qtop">
+      <div class="qtitle">${i.title} ${i.edited?'<span class="chip neutral">edited</span>':''} ${i.flagged?'<span class="chip red">flag</span>':''}</div>
+      <span class="chip line">${i.line}</span>${engineChip(i.engine)}
+    </div>
+    <div class="qbody">${i.body||""}${i.caveat?`<span class="caveat">⚠ ${i.caveat}</span>`:""}</div>
+    ${i.next?`<div class="route"><b>Suggested next:</b> ${PEOPLE[i.next.to].name} (${PEOPLE[i.next.to].fn}), ${i.next.reason}.</div>`:""}
+    <div class="qactions">
+      ${i.actions?custom:std}
+      ${assignControls(i)}
+      <button class="btn ghost" onclick="toggleEdit('${i.id}')">Edit</button>
+      <button class="btn danger" onclick="resolveItem('${i.id}','rejected')">Reject</button>
+      <span class="meta" style="margin-left:auto">with ${PEOPLE[i.approver].name}</span>
+    </div>
+    <div class="editbox" id="eb-${i.id}">
+      <textarea id="ta-${i.id}">${(i.body||"").replace(/<[^>]*>/g,"")}</textarea>
+      <div class="row"><button class="btn approve" onclick="saveEdit('${i.id}')">Save edit (logged)</button>
+      <button class="btn ghost" onclick="toggleEdit('${i.id}')">Cancel</button></div>
+    </div>
+    ${provLine(i)}
+  </div>`;
+}
+
+function ragCard(i){
+  const canApprove = state.role==="delivery"||state.role==="coordinator";
+  return `<div class="qitem" id="qi-${i.id}">
+    <div class="qtop"><div class="qtitle">${i.title}</div><span class="chip line">${i.line}</span>${engineChip(i.engine)}</div>
+    <div style="margin-top:8px">
+      <div class="ragproj"><span class="pname">ARIA</span><span class="chip green">Green</span>
+        <span class="pdetail">UAT on track for w/c 16 Jun. 14 of 16 sprint tasks closed.</span></div>
+      <div class="ragproj"><span class="pname">LUCE</span><span class="chip amber">Amber</span>
+        <span class="pdetail">Ingestion connector behind; contractor sprint 14 starting late. <b style="color:var(--amber)">Data confidence: LOW</b>, 2 Asana tasks with no update in over 5 days.</span></div>
+      <div class="ragproj"><span class="pname">Audit Tool</span><span class="chip red">Red</span>
+        <span class="pdetail">Gap-analysis deliverable 3 days past SLA. Milestone 'regulatory review pack' at risk of slipping to July.</span></div>
+    </div>
+    ${canApprove?`
+    <div style="margin-top:10px">
+      <label class="meta" style="display:block;margin-bottom:4px;font-weight:700;letter-spacing:.08em;text-transform:uppercase">Strategic commentary (the human 10%)</label>
+      <textarea id="ragnote" style="width:100%;min-height:60px;border:1px solid var(--grey);border-radius:6px;font-family:'Roboto',sans-serif;font-size:13px;padding:10px" placeholder="e.g. Audit Tool red is contained; escalation already in motion, client unaffected this sprint."></textarea>
+    </div>`:""}
+    ${i.next?`<div class="route"><b>Suggested next:</b> ${PEOPLE[i.next.to].name} (${PEOPLE[i.next.to].fn}), ${i.next.reason}.</div>`:""}
+    <div class="qactions">
+      ${canApprove?`<button class="btn approve" onclick="resolveItem('${i.id}','approved','Report approved and distributed to leadership')">Approve & send</button>`:""}
+      ${assignControls(i)}
+      <button class="btn danger" onclick="resolveItem('${i.id}','rejected')">Reject draft</button>
+      <span class="meta" style="margin-left:auto">with ${PEOPLE[i.approver].name}</span>
+    </div>
+    ${provLine(i)}
+  </div>`;
+}
+
+/* ---------------- views ---------------- */
+
+function vToday(){
+  const mine=visibleItems(state.role);
+  const runs={
+    coordinator:["Sweep all queues: "+ITEMS.filter(i=>i.status!=="done").length+" items live across five functions","Unblock the MedDev onboarding chain: IT access outstanding since Monday","Resolve the incomplete-transcript flag and check trigger health"],
+    sales:["Review the LUCE pre-sales brief for NovaMed (24h SLA)","Fix 2 proposal QC findings on Thornfield; day 4 of the 5-day window","Route the MedDev SOW to Liam; approve CRM updates and content"],
+    talent:["Review the 87% candidate match and route to Sarah for technical fit","Action the bench alert: consultant rolling off in 2 weeks","Send the sprint 14 contractor brief"],
+    delivery:["Olympus content freeze in 2 days: decide accelerate vs re-date","Approve 3 meeting actions; send the RAG report to leadership","Keep the month-end chain moving: 3 projects pending time approvals"],
+    finance:["Approve 4 clean Xero invoice drafts; route the ARIA 6h variance to Sarah","Verify 2 EI log entries (1 blocked on missing evidence)","Route the TR-204 margin alert to Conor for a pricing review"],
+    exec:["Sign off verified EI entries (second-signer rule)","Review the retainer renewal recommendation from Conor","Review revenue, margin and SLA performance by business line"],
+  }[state.role];
+  return `
+  <div class="pagehead"><h2>Good morning, ${PEOPLE[state.role].name}</h2>
+  <p>Five verbs run the back office: <b>find</b> information, <b>draft</b> things, <b>check</b> things, <b>move</b> work along, and <b>report</b>. Your workspace shows the state of what you watch; the queues hold what is waiting on you.</p></div>
+
+  <div class="filterbar" style="margin-bottom:16px">
+    <button onclick="setPage('workbench')">Find → Workbench</button>
+    <button onclick="setPage('workbench')">Draft → Workbench</button>
+    <button onclick="setPage('approvals')">Check → Queues</button>
+    <button onclick="setPage('chains')">Move → Chains</button>
+    <button onclick="setPage('kpis')">Report → KPIs</button>
+  </div>
+
+  <div class="grid g4" style="margin-bottom:16px">
+    <div class="stat"><div class="label">Waiting on you</div><div class="value">${mine.length}</div><div class="sub">items in your queues</div></div>
+    <div class="stat t"><div class="label">Cleared this session</div><div class="value">${state.cleared}</div><div class="sub">approvals, routings, decisions</div></div>
+    <div class="stat t"><div class="label">Est. minutes saved</div><div class="value">${state.minutesSaved}</div><div class="sub">vs current-state baseline</div></div>
+    <div class="stat"><div class="label">Chain steps blocked</div><div class="value">${blockedCount()}</div><div class="sub">across ${CHAINS.length} live process chains</div></div>
+  </div>
+
+  ${roleBoard()}
+
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card"><h3>Coming up <span class="chip neutral">cross-function</span></h3>
+      ${COMINGUP.map(c=>`<div class="checkrow"><span class="tick"></span>
+        <span style="width:84px;flex-shrink:0;font-size:12px;font-weight:700;color:var(--navy)">${c.when}</span>
+        <span style="flex:1;font-size:12.5px;color:var(--ink-soft)">${c.what}</span>
+        <span class="chip neutral">${c.who}</span></div>`).join("")}
+    </div>
+    <div class="card"><h3>Your morning run</h3>
+      ${runs.map(r=>`<div class="checkrow"><span class="tick"></span><span style="flex:1;font-size:13.5px">${r}</span>
+        <button class="btn ghost" onclick="setPage('approvals')">Open</button></div>`).join("")}
+    </div>
+  </div>`;
+}
+
+/* ----- role-specific workspace boards ----- */
+function roleBoard(){
+  const r = state.role;
+
+  if(r==="sales") return `
+  <div class="card" style="margin-bottom:14px">
+    <h3>Pipeline: leads & opportunities <span class="chip neutral">live from Salesforce + LUCE</span></h3>
+    <table>
+      <tr><th>Opportunity</th><th>Line</th><th>Stage</th><th>Value</th><th>Next action</th></tr>
+      ${PIPELINE.map(p=>`<tr><td>${p.opp}${p.src?`<br><span class="meta">↳ ${p.src}</span>`:""}</td>
+        <td>${p.line}</td><td><span class="chip ${STAGECHIP[p.stage]||'neutral'}">${p.stage}</span></td>
+        <td>${p.value}</td><td>${p.next}</td></tr>`).join("")}
+    </table>
+    <p class="meta" style="margin-top:8px">Total in play: €391K · weighted ~€168K. Leads referred by Delivery appear here automatically with project context attached.</p>
+  </div>
+  <div class="grid g4">
+    <div class="stat"><div class="label">Revenue MTD</div><div class="value">€412k</div><div class="sub">+8% vs May</div></div>
+    <div class="stat"><div class="label">Blended margin</div><div class="value">31%</div><div class="sub">target 33% · TR-204 alert live</div></div>
+    <div class="stat t"><div class="label">Pipeline cover</div><div class="value">2.8×</div><div class="sub">next two quarters</div></div>
+    <div class="stat t"><div class="label">Proposal window</div><div class="value">2 open</div><div class="sub">both inside the 5-day target</div></div>
+  </div>`;
+
+  if(r==="talent") return `
+  <div class="card">
+    <h3>Bench: availability, rate, match <span class="chip neutral">PSOHub + consultant tracker</span></h3>
+    <table>
+      <tr><th>Consultant</th><th>Rate</th><th>Available</th><th>Match to opportunities</th><th>Status</th></tr>
+      ${BENCH.map(b=>`<tr><td>${b.name}</td><td>${b.rate}</td><td>${b.avail}</td><td>${b.match}</td>
+        <td><span class="chip ${BENCHCHIP[b.state]}">${b.state}</span></td></tr>`).join("")}
+    </table>
+    <p class="meta" style="margin-top:8px"><b style="color:var(--navy)">Demand signal from the pipeline:</b> if NovaMed and MedDev sign, July needs 2 QA consultants and the Regulatory SME at 50%. The match engine re-scores the bench nightly against open and likely opportunities.</p>
+  </div>`;
+
+  if(r==="delivery") return `
+  <div class="card">
+    <h3>Projects & client satisfaction <span class="chip neutral">PSOHub + QBR feedback</span></h3>
+    <table>
+      <tr><th>Project</th><th>Line</th><th>Status</th><th>CSAT</th><th>Note</th><th></th></tr>
+      ${PROJECTS.map((p,i)=>`<tr><td>${p.p}</td><td>${p.line}</td>
+        <td><span class="chip ${p.rag}">${p.rag.toUpperCase()}</span></td><td>${p.csat}</td>
+        <td>${p.note}${p.opp?`<br><span class="meta" style="color:var(--amber)">Opportunity heard: ${p.opp}</span>`:""}</td>
+        <td>${p.opp?(p.passed?'<span class="chip green">passed to Sales</span>':`<button class="btn assign" onclick="passToSales(${i})">Pass to Sales</button>`):""}</td></tr>`).join("")}
+    </table>
+    <p class="meta" style="margin-top:8px">Passing an opportunity creates a lead in the Sales pipeline with project context and CSAT attached, queues a LUCE brief, and logs the handoff. You stay the relationship owner.</p>
+  </div>`;
+
+  if(r==="finance") return `
+  <div class="grid g2">
+    <div class="card"><h3>Accounts receivable <span class="chip neutral">Xero · ageing</span></h3>
+      ${FIN_AR.map(a=>`<div class="bar-row"><span class="bl">${a[0]}</span>
+        <div class="track"><div class="fill" style="width:${a[2]};background:var(--${a[3]==='green'?'green':a[3]==='amber'?'amber':'red'})"></div></div>
+        <span class="bv">${a[1]}</span></div>`).join("")}
+      <p class="meta" style="margin-top:8px">€18K at 60+ days: chase email drafted and waiting in your queue. DSO 38 days, down from 44.</p>
+    </div>
+    <div class="card"><h3>Accounts payable <span class="chip neutral">Spendesk → Xero</span></h3>
+      ${FIN_AP.map(a=>`<div class="checkrow"><span class="tick"></span>
+        <span style="flex:1;font-size:13px">${a[0]}</span>
+        <span style="font-size:12.5px;font-weight:700;color:var(--navy)">${a[1]}</span></div>`).join("")}
+      <p class="meta" style="margin-top:8px">All 7 consultant invoices passed the three-way match. Scheduling and paying stay human, always.</p>
+    </div>
+  </div>`;
+
+  if(r==="coordinator") return `
+  <div class="grid g2">
+    <div class="card"><h3>Agent performance <span class="chip neutral">last 7 days</span></h3>
+      <table>
+        <tr><th>Agent</th><th>Runs</th><th>Clean</th><th>Exceptions</th></tr>
+        ${AGENTSTATS.map(a=>`<tr><td>${a.a}</td><td>${a.runs}</td><td>${a.ok}</td><td>${a.exc}</td></tr>`).join("")}
+      </table>
+      <p class="meta" style="margin-top:8px">2 poka-yoke holds active (short transcript, missing EI evidence) · ${CORRECTIONS.length} corrections this month feeding the prompt review · token spend €238 MTD.</p>
+    </div>
+    <div class="card"><h3>Adoption: is the system being used well? <span class="chip neutral">queue health by person</span></h3>
+      <table>
+        <tr><th>Person</th><th>Cleared (wk)</th><th>Avg time to clear</th><th>Oldest pending</th></tr>
+        ${ADOPTION.map(a=>`<tr><td>${a.who} ${a.ok?'':'<span class="chip amber">attention</span>'}</td>
+          <td>${a.cleared}</td><td>${a.avg}</td><td>${a.oldest}${a.note?`<br><span class="meta">${a.note}</span>`:""}</td></tr>`).join("")}
+      </table>
+      <p class="meta" style="margin-top:8px">This is adoption support, not surveillance: an ageing queue usually means a blocker, a confusing item, or a training gap. Talk to the person before tuning the system.</p>
+    </div>
+  </div>`;
+
+  /* exec */
+  return `
+  <div class="grid g4">
+    <div class="stat"><div class="label">Revenue MTD</div><div class="value">€412k</div><div class="sub">margin 31% vs 33% target</div></div>
+    <div class="stat"><div class="label">Client satisfaction</div><div class="value">4.5/5</div><div class="sub">NPS +41 · 1 at-risk account</div></div>
+    <div class="stat t"><div class="label">People</div><div class="value">8.1/10</div><div class="sub">utilisation 78% · 1 bench alert</div></div>
+    <div class="stat t"><div class="label">Awaiting your sign-off</div><div class="value">${visibleItems('exec').length}</div><div class="sub">EI entries + renewal recommendation</div></div>
+  </div>`;
+}
+
+function vApprovals(){
+  let mine=visibleItems(state.role);
+  if(state.lineFilter!=="All") mine=mine.filter(i=>i.line===state.lineFilter);
+  const isCoord=state.role==="coordinator";
+  /* group: coordinator groups by function, others by item group */
+  const keyOf = i => isCoord ? `${PEOPLE[i.approver].fn} (${PEOPLE[i.approver].name})` : i.group;
+  const keys=[...new Set(mine.map(keyOf))];
+  return `
+  <div class="pagehead"><h2>Approval queues</h2>
+  <p>Every engine output lands here and waits for a human decision: approve it, edit it, reject it, or assign it to the next relevant person. Approvals write to the system of record; edits and rejections feed the Correction_Log; every handoff is logged with who, to whom, and why.</p></div>
+  <div class="filterbar">
+    ${["All",...LINES].map(l=>`<button class="${state.lineFilter===l?'active':''}" onclick="setLine('${l}')">${l}</button>`).join("")}
+  </div>
+  ${mine.length===0?`<div class="empty">Queue clear. Nothing is waiting on ${PEOPLE[state.role].name}.</div>`:""}
+  ${keys.map(k=>{
+    const items=mine.filter(i=>keyOf(i)===k);
+    return `<div class="queue-group">
+      <div class="qhead"><h3>${k}</h3><span class="count">${items.length} pending</span></div>
+      ${items.map(i=>i.rag?ragCard(i):qcard(i)).join("")}
+    </div>`;
+  }).join("")}`;
+}
+
+function vWorkbench(){
+  return `
+  <div class="pagehead"><h2>Workbench</h2>
+  <p>The four engines, on demand: find an answer, draft a document, or review one against a ruleset. Outputs land in your approval queue, never straight into a system or an inbox.</p></div>
+
+  <div class="card wb">
+    <div class="wbhead"><span class="chip retrieve">RETRIEVE</span><h3>Find: ask the library</h3></div>
+    <input type="text" id="wbQ" placeholder="e.g. What are our standard payment terms for staffing engagements?">
+    <div class="row"><button class="btn approve" onclick="wbAsk()">Ask</button>
+    <span class="meta">Answers cite their sources: SOPs, contracts, rate cards, policies.</span></div>
+    <div class="answer" id="wbAnswer">
+      <b style="color:var(--navy)">Standard payment terms for staffing engagements are 30 days from invoice date</b>, with a 14-day option for framework clients at a 1.5% early-settlement discount. Rate-card uplifts apply for sub-10-day placements.
+      <div style="margin-top:8px"><span class="cite">MSA template §6.2</span><span class="cite">Staffing rate card 2026 v3</span><span class="cite">Finance SOP-009 §4</span></div>
+      <div class="meta" style="margin-top:8px">Retrieve engine · Sonnet · cited from 3 sources · demo answer</div>
+    </div>
+  </div>
+
+  <div class="card wb">
+    <div class="wbhead"><span class="chip draft">DRAFT</span><h3>Draft: create a document</h3></div>
+    <div class="row" style="margin-top:0">
+      <select id="wbType" style="max-width:220px">
+        <option>Client email</option><option>SOW</option><option>Proposal</option>
+        <option>SOP</option><option>Project plan</option><option>Job spec</option><option>Sprint brief</option>
+      </select>
+      <select id="wbLine" style="max-width:200px">
+        ${LINES.map(l=>`<option>${l}</option>`).join("")}
+      </select>
+    </div>
+    <div class="row"><textarea id="wbCtx" placeholder="Context: paste an email thread, meeting notes, or a short brief…"></textarea></div>
+    <div class="row"><button class="btn approve" onclick="wbDraft()">Generate draft</button>
+    <span class="meta">Drafts use the branded Word template: Roboto, #01163B headings, branded tables.</span></div>
+  </div>
+
+  <div class="card wb">
+    <div class="wbhead"><span class="chip audit">AUDIT</span><h3>Review: check a document against a ruleset</h3></div>
+    <div class="row" style="margin-top:0">
+      <select id="wbRule" style="max-width:320px">
+        <option>SOW vs rate card and margin floor</option>
+        <option>SOP vs QMS template</option>
+        <option>Contract vs MSA standard clauses</option>
+        <option>Invoice vs tracked deliverables</option>
+        <option>Cross-document consistency</option>
+      </select>
+      <button class="btn approve" onclick="wbReview()">Simulate upload & review</button>
+    </div>
+    <p class="meta" style="margin-top:8px">Findings come back as a redlined queue item; nothing is changed in the source document without approval.</p>
+  </div>`;
+}
+
+function vKPIs(){
+  return `
+  <div class="pagehead"><h2>KPIs & reports</h2>
+  <p>The agents do not calculate strategy; they keep these numbers current. Each figure shows where it came from and when it was last refreshed, with low-confidence data flagged rather than hidden.</p></div>
+
+  <div class="grid g3" style="margin-bottom:16px">
+    <div class="card"><h3>Sales <span class="chip neutral">revenue · margin</span></h3>
+      <div class="grid g2" style="gap:10px">
+        <div><div class="meta">Revenue MTD</div><div style="font-size:24px;font-weight:700;color:var(--navy)">€412k</div><span class="chip green">+8% vs May</span></div>
+        <div><div class="meta">Blended margin</div><div style="font-size:24px;font-weight:700;color:var(--navy)">31%</div><span class="chip amber">target 33%</span></div>
+        <div><div class="meta">Pipeline cover</div><div style="font-size:24px;font-weight:700;color:var(--navy)">2.8×</div><span class="chip green">healthy</span></div>
+        <div><div class="meta">Proposals out</div><div style="font-size:24px;font-weight:700;color:var(--navy)">7</div><span class="chip neutral">3 awaiting reply</span></div>
+      </div>
+      <div class="meta" style="margin-top:10px;border-top:1px dashed var(--grey);padding-top:6px">CRM synced today 06:30 · Extract engine · 3 updates pending approval</div>
+    </div>
+    <div class="card"><h3>People <span class="chip neutral">satisfaction · performance</span></h3>
+      <div class="grid g2" style="gap:10px">
+        <div><div class="meta">Team satisfaction</div><div style="font-size:24px;font-weight:700;color:var(--navy)">8.1<span style="font-size:13px;color:var(--ink-faint)">/10</span></div><span class="chip green">May pulse</span></div>
+        <div><div class="meta">Utilisation</div><div style="font-size:24px;font-weight:700;color:var(--navy)">78%</div><span class="chip amber">bench alert active</span></div>
+        <div><div class="meta">Reviews complete</div><div style="font-size:24px;font-weight:700;color:var(--navy)">92%</div><span class="chip green">Q2 cycle</span></div>
+        <div><div class="meta">Open roles</div><div style="font-size:24px;font-weight:700;color:var(--navy)">4</div><span class="chip neutral">2 matched</span></div>
+      </div>
+      <div class="meta" style="margin-top:10px;border-top:1px dashed var(--grey);padding-top:6px">Timesheets and pulse synced Mon · utilisation dips to 71% if bench alert unresolved</div>
+    </div>
+    <div class="card"><h3>Client <span class="chip neutral">feedback · engagement</span></h3>
+      <div class="grid g2" style="gap:10px">
+        <div><div class="meta">CSAT</div><div style="font-size:24px;font-weight:700;color:var(--navy)">4.5<span style="font-size:13px;color:var(--ink-faint)">/5</span></div><span class="chip green">12 responses</span></div>
+        <div><div class="meta">NPS</div><div style="font-size:24px;font-weight:700;color:var(--navy)">+41</div><span class="chip green">up from +34</span></div>
+        <div><div class="meta">QBR engagement</div><div style="font-size:24px;font-weight:700;color:var(--navy)">87%</div><span class="chip neutral">attendance</span></div>
+        <div><div class="meta">At-risk accounts</div><div style="font-size:24px;font-weight:700;color:var(--navy)">1</div><span class="chip red">Audit Tool: red</span></div>
+      </div>
+      <div class="meta" style="margin-top:10px;border-top:1px dashed var(--grey);padding-top:6px">Feedback extracted from QBR notes and surveys · last refresh Fri</div>
+    </div>
+  </div>
+
+  <div class="grid g2" style="margin-bottom:16px">
+    <div class="card"><h3>Revenue by business line (MTD)</h3>
+      <div class="bar-row"><span class="bl">QA/RA projects</span><div class="track"><div class="fill" style="width:90%;background:var(--navy)"></div></div><span class="bv">€184k</span></div>
+      <div class="bar-row"><span class="bl">Staffing</span><div class="track"><div class="fill" style="width:59%;background:var(--navy)"></div></div><span class="bv">€121k</span></div>
+      <div class="bar-row"><span class="bl">Training</span><div class="track"><div class="fill" style="width:23%;background:var(--turq)"></div></div><span class="bv">€48k</span></div>
+      <div class="bar-row"><span class="bl">AI</span><div class="track"><div class="fill" style="width:19%;background:var(--turq)"></div></div><span class="bv">€38k</span></div>
+      <div class="bar-row"><span class="bl">Margin Improvement</span><div class="track"><div class="fill" style="width:10%;background:var(--slate)"></div></div><span class="bv">€21k</span></div>
+    </div>
+    <div class="card"><h3>Margin by business line</h3>
+      <div class="bar-row"><span class="bl">Margin Improvement</span><div class="track"><div class="fill" style="width:88%;background:var(--green)"></div></div><span class="bv">55%</span></div>
+      <div class="bar-row"><span class="bl">Training</span><div class="track"><div class="fill" style="width:66%;background:var(--green)"></div></div><span class="bv">41% ⚠ TR-204</span></div>
+      <div class="bar-row"><span class="bl">QA/RA projects</span><div class="track"><div class="fill" style="width:54%;background:var(--navy)"></div></div><span class="bv">34%</span></div>
+      <div class="bar-row"><span class="bl">AI</span><div class="track"><div class="fill" style="width:46%;background:var(--navy)"></div></div><span class="bv">29%</span></div>
+      <div class="bar-row"><span class="bl">Staffing</span><div class="track"><div class="fill" style="width:35%;background:var(--amber)"></div></div><span class="bv">22%</span></div>
+      <p class="meta" style="margin-top:8px">TR-204 margin alert is live in the Finance queue, routed to Sales for a pricing review.</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <h3>Operational SLAs <span class="chip neutral">from the mapped processes & SOPs</span></h3>
+    <div class="grid g4" style="gap:10px">
+      <div><div class="meta">Lead → LUCE brief reviewed (24h)</div><div style="font-size:22px;font-weight:700;color:var(--navy)">94%</div><span class="chip green">on SLA, Q2</span></div>
+      <div><div class="meta">Discovery → proposal (5 days)</div><div style="font-size:22px;font-weight:700;color:var(--navy)">3.8d</div><span class="chip green">avg · converts 2× faster</span></div>
+      <div><div class="meta">SOW breakdown (24h)</div><div style="font-size:22px;font-weight:700;color:var(--navy)">100%</div><span class="chip green">12 of 12 this quarter</span></div>
+      <div><div class="meta">Content freeze compliance</div><div style="font-size:22px;font-weight:700;color:var(--navy)">1 at risk</div><span class="chip amber">Olympus, freeze in 2 days</span></div>
+    </div>
+    <div class="meta" style="margin-top:10px;border-top:1px dashed var(--grey);padding-top:6px">These SLAs are measured automatically from chain timestamps; no one fills in a tracker.</div>
+  </div>
+
+  <div class="card">
+    <h3>Delivery status: bi-weekly RAG ${ITEMS.find(i=>i.rag&&i.status!=="done")?'<span class="chip amber">draft awaiting Delivery</span>':'<span class="chip green">approved & sent</span>'}</h3>
+    <div class="ragproj"><span class="pname">ARIA</span><span class="chip green">Green</span><span class="pdetail">UAT on track for w/c 16 Jun.</span></div>
+    <div class="ragproj"><span class="pname">LUCE</span><span class="chip amber">Amber</span><span class="pdetail">Connector behind; data-confidence caveat attached.</span></div>
+    <div class="ragproj"><span class="pname">Audit Tool</span><span class="chip red">Red</span><span class="pdetail">Deliverable past SLA; escalation routed through the queues.</span></div>
+  </div>`;
+}
+
+function vTriggers(){
+  return `
+  <div class="pagehead"><h2>Workflows & triggers</h2>
+  <p>Each workflow has an unambiguous start condition; vague triggers make temperamental agents. Fire a configuration manually, or watch what is in flight. A new back-office need is a new topping on an existing engine, configured here, not coded.</p></div>
+  ${TRIGGERS.map(t=>`
+    <div class="trig">
+      <span class="dot ${t.inFlight?'flight':t.mode==='live'?'live':t.mode==='sched'?'sched':'manual'}"></span>
+      <div class="body">
+        <div class="name">${t.agent} ${t.inFlight?'<span class="chip amber">in flight…</span>':''}</div>
+        <div class="cond">${t.cond}</div>
+        <div class="last">${t.last}</div>
+      </div>
+      ${t.canRun?`<button class="btn approve" ${t.inFlight?'disabled':''} onclick="fireTrigger('${t.id}')">${t.inFlight?'Running…':(t.runLabel||'Run now')}</button>`:`<span class="chip neutral">event-driven</span>`}
+    </div>`).join("")}
+  <div class="footer-note">Trigger definitions are locked per the readiness document; changes go through engine configuration.</div>`;
+}
+
+function vProv(){
+  return `
+  <div class="pagehead"><h2>Provenance & cost</h2>
+  <p>Who changed what, who handed what to whom, and what every output cost. The correction log turns human edits into a feedback dataset; the handoff log makes routing auditable.</p></div>
+
+  <div class="grid g3" style="margin-bottom:16px">
+    <div class="stat"><div class="label">Token spend (MTD)</div><div class="value">€238</div><div class="sub">vs ~€3,800/wk human-time baseline</div></div>
+    <div class="stat t"><div class="label">Corrections this month</div><div class="value">${CORRECTIONS.length}</div><div class="sub">1 recurring pattern flagged</div></div>
+    <div class="stat t"><div class="label">Handoffs logged</div><div class="value">${HANDOFFS.length}</div><div class="sub">every assign records who, to whom, why</div></div>
+  </div>
+
+  <div class="grid g2" style="margin-bottom:16px">
+    <div class="card"><h3>Spend by model tier (MTD)</h3>
+      <div class="bar-row"><span class="bl">Haiku (€)</span><div class="track"><div class="fill" style="width:64%;background:var(--turq)"></div></div><span class="bv">€41 · 2.0M tok</span></div>
+      <div class="bar-row"><span class="bl">Sonnet (€€)</span><div class="track"><div class="fill" style="width:88%;background:var(--navy)"></div></div><span class="bv">€171 · 2.9M tok</span></div>
+      <div class="bar-row"><span class="bl">Opus (€€€)</span><div class="track"><div class="fill" style="width:18%;background:var(--slate)"></div></div><span class="bv">€26 · 0.1M tok</span></div>
+      <p class="meta" style="margin-top:8px">Opus reserved for EI cross-reference checks; runs rarely, so cost stays low, as the routing rules intend.</p>
+    </div>
+    <div class="card"><h3>Spend by function (MTD)</h3>
+      <div class="bar-row"><span class="bl">Client Delivery</span><div class="track"><div class="fill" style="width:62%;background:var(--navy)"></div></div><span class="bv">€78</span></div>
+      <div class="bar-row"><span class="bl">Sales & Marketing</span><div class="track"><div class="fill" style="width:54%;background:var(--navy)"></div></div><span class="bv">€67</span></div>
+      <div class="bar-row"><span class="bl">Finance</span><div class="track"><div class="fill" style="width:38%;background:var(--turq)"></div></div><span class="bv">€48</span></div>
+      <div class="bar-row"><span class="bl">Talent / Resourcing</span><div class="track"><div class="fill" style="width:29%;background:var(--turq)"></div></div><span class="bv">€36</span></div>
+      <div class="bar-row"><span class="bl">Coordinator / system</span><div class="track"><div class="fill" style="width:7%;background:var(--slate)"></div></div><span class="bv">€9</span></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <h3>Handoff log <span class="chip neutral">routing audit trail</span></h3>
+    <table>
+      <tr><th>Date</th><th>Item</th><th>From</th><th>To</th><th>Reason</th><th>Outcome</th></tr>
+      ${HANDOFFS.map(h=>`<tr><td>${h.date}</td><td>${h.item}</td><td>${h.from}</td><td>${h.to}</td><td>${h.reason}</td><td>${h.outcome}</td></tr>`).join("")}
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Correction log <span class="chip neutral">Agent_Corrections: feeds the monthly prompt review</span></h3>
+    <table>
+      <tr><th>Date</th><th>Source</th><th>Correction type</th><th>By</th><th>Detail</th></tr>
+      ${CORRECTIONS.map(c=>`<tr><td>${c.date}</td><td>${c.agent}</td><td>${c.type}</td><td>${c.by}</td><td>${c.detail}</td></tr>`).join("")}
+    </table>
+  </div>
+  <div class="footer-note">Every output records engine, model version, token count, timestamp, approver and handoff trail: the discipline that makes these engines safe for client and GxP work.</div>`;
+}
+
+function vEngines(){
+  return `
+  <div class="pagehead"><h2>Engine configuration</h2>
+  <p>Build the four bases once; configure them endlessly. A new back-office need is a new topping on an existing engine: configuration, not code. Same architecture as the client-facing DHF programme, so Trinzo is the first user of its own product.</p></div>
+
+  <div class="grid g4" style="margin-bottom:16px">
+    ${ENGINES.map(e=>`
+      <div class="card">
+        <h3 style="color:var(--navy)">${e.name}</h3>
+        <div class="meta" style="margin-bottom:6px">${e.sub}</div>
+        ${e.tops.map(t=>`<div class="checkrow" style="padding:5px 0"><span class="tick"></span><span style="font-size:12.5px;color:var(--ink-soft)">${t}</span></div>`).join("")}
+        <div class="qactions"><button class="btn ghost" onclick="toast('New topping flow: define trigger, input format, output destination, approver and next-person routing. Configuration only; no code.')">+ Add topping</button></div>
+      </div>`).join("")}
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <h3>Model routing rules <span class="chip neutral">Airia configuration, reviewed at 8 weeks</span></h3>
+    <table>
+      <tr><th>Task type</th><th>Model</th><th>Why</th><th>Cost tier</th></tr>
+      ${ROUTING.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join("")}
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Shared data schema <span class="chip neutral">the anti-silo layer</span></h3>
+    <table>
+      <tr><th>Object</th><th>Lives in</th><th>Written by</th><th>Read by</th></tr>
+      <tr><td>Lead / Opportunity</td><td>Salesforce + SharePoint</td><td>LUCE brief + Extract → Sales approves</td><td>KPI sync, Draft (proposals, SOWs)</td></tr>
+      <tr><td>Meeting / Action</td><td>SharePoint + Teams</td><td>Extract engine → owner approves</td><td>RAG, KPI sync, EI tracker</td></tr>
+      <tr><td>Project / Engagement</td><td>PSOHub (primary) + SharePoint</td><td>Salesforce integration + onboarding chain</td><td>RAG, burn sheets, month-end close</td></tr>
+      <tr><td>Time / Expense entries</td><td>PSOHub → Xero / Spendesk</td><td>Consultants → PM approves</td><td>Burn sheets, three-way match, payroll</td></tr>
+      <tr><td>Burn sheet / 'Bible'</td><td>Excel (SharePoint)</td><td>Agent drafts → Delivery approves</td><td>Margin watch, contract-end alerts, KPIs</td></tr>
+      <tr><td>Invoice / Bill</td><td>Xero + Spendesk</td><td>Audit engine drafts → Finance approves; payment always human</td><td>AR/AP status, margin</td></tr>
+      <tr><td>Person / Candidate / Contractor</td><td>SharePoint lists + PSOHub</td><td>Talent maintains → Retrieve matches</td><td>Matching, briefs, utilisation</td></tr>
+      <tr><td>EI_Log_Entry</td><td>SharePoint: EI_Grant_Log</td><td>Audit engine → Finance verifies → PI signs</td><td>External auditor</td></tr>
+      <tr><td>Content_Asset / Case study</td><td>SharePoint + Drive, Gamma, LMS</td><td>Upload or close trigger → Draft engine</td><td>Flywheel, proposals, training chains</td></tr>
+      <tr><td>KPI_Snapshot / Chain state</td><td>Supabase (live) → SharePoint</td><td>KPI sync + chain orchestrators</td><td>KPIs, SLAs, process chains page</td></tr>
+      <tr><td>Correction_Log / Handoff_Log</td><td>SharePoint lists</td><td>Any approver, on edit, reject or assign</td><td>Build partner (monthly review)</td></tr>
+    </table>
+    <p class="meta" style="margin-top:8px">Supabase holds live state; SharePoint is the archive of record. No agent stores data only it can see.</p>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3>Function coverage backlog <span class="chip neutral">from the process workshop mural</span></h3>
+    <table>
+      <tr><th>Function</th><th>Key processes mapped</th><th>Candidate agent toppings (workshop ideas)</th><th>Coverage</th></tr>
+      <tr><td>Sales & Marketing</td><td>Lead to Opportunity (11 steps), account management, market mapping, sales operations, marketing operations</td><td>CRM hygiene, lead triage (LUCE), lost-sales analysis, content engine</td><td><span class="chip green">live</span></td></tr>
+      <tr><td>Client Delivery</td><td>SOW signed → kick-off (int/ext) → consultant onboarding → time/expense monitoring → reporting → close</td><td>Onboarding chain, burn sheets, RAG reports, governance packs</td><td><span class="chip green">live</span></td></tr>
+      <tr><td>Finance</td><td>Client invoicing, paying consultants/suppliers/expenses, month end, bank reconciliation, budget setting, statutory accounting</td><td>Three-way match, Xero draft invoices, spend-limit checks</td><td><span class="chip green">live</span></td></tr>
+      <tr><td>Talent & Acquisition</td><td>Sourcing & talent pooling, recruiting chain (requirement → offer), onboarding/offboarding of externals</td><td>Bench matching, advert + assessment drafting, reference chasing</td><td><span class="chip green">live</span></td></tr>
+      <tr><td>Training</td><td>Lead qualification → winning SoW → project setup → execution → reporting</td><td>Content production chain (SOP-TC-001), feedback-loop synthesis</td><td><span class="chip green">live</span></td></tr>
+      <tr><td>IT</td><td>Hardware tracking & forecasting, support tickets, on/offboarding, vendor governance, audits, software costing</td><td>AI hardware forecasting, automated vendor evaluation, centralised audit management</td><td><span class="chip amber">planned</span></td></tr>
+      <tr><td>HR</td><td>Hiring (int/ext), payroll (IRL + US), comp & benefits, policy management, leave, probation, surveys</td><td>Policy Q&A (Retrieve), leave tracking, survey synthesis, salary-review packs</td><td><span class="chip amber">planned</span></td></tr>
+      <tr><td>Legal</td><td>Client/vendor contract management, MSA · NDA · SOW drafting and approval, GDPR, legal research (US entity, insurance, AVL, visas)</td><td>Contract drafting + review vs MSA standards, AI-assisted legal research</td><td><span class="chip amber">planned</span></td></tr>
+      <tr><td>Administration</td><td>Office management, bookings, H&S, risk, system access (Metronome, Adobe Sign, Mural), meeting cadence</td><td>Access-provisioning checklists, booking agent, meeting-cadence management</td><td><span class="chip amber">planned</span></td></tr>
+      <tr><td>EE</td><td>EE SoW lifecycle (discovery → setup → reporting → close-out), WoW standards, team performance & development</td><td>Standards deployment tracker, project setup/reporting automation, 1:1 and review packs</td><td><span class="chip amber">planned</span></td></tr>
+    </table>
+    <p class="meta" style="margin-top:8px">Each planned row is configuration on the existing engines, not new code. The candidate toppings come from the workshop's own Suggested Ideas stickies, so they arrive pre-validated by the teams that run the processes.</p>
+  </div>
+  <div class="footer-note">Scope locks: invoice parsing is Phase 2 · payment decisions are never automated · monitored EI channels are a manually approved list · hiring and firing decisions stay human.</div>`;
+}
+
+render();
+</script>
+</body>
+</html>
