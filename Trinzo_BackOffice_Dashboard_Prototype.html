@@ -28,8 +28,8 @@
   .spacer{flex:1;}
   .role-note{font-size:11.5px;color:var(--ink-faint);max-width:210px;text-align:right;}
   .role-switch{display:flex;gap:4px;background:var(--grey-tint);border:1px solid var(--grey);border-radius:8px;padding:4px;}
-  .role-switch button{border:none;background:transparent;font-family:'Roboto',sans-serif;font-size:12.5px;font-weight:500;
-    color:var(--ink-soft);padding:7px 12px;border-radius:6px;cursor:pointer;transition:all .15s;}
+  .role-switch button{border:none;background:transparent;font-family:'Roboto',sans-serif;font-size:11px;font-weight:500;
+    color:var(--ink-soft);padding:6px 9px;border-radius:6px;cursor:pointer;transition:all .15s;white-space:nowrap;}
   .role-switch button:hover{color:var(--navy);}
   .role-switch button.active{background:var(--navy);color:#fff;font-weight:700;}
 
@@ -181,6 +181,36 @@
   .step .snote{font-size:10.5px;color:var(--ink-soft);margin-top:3px;font-style:italic;}
   .gatebar{margin-top:11px;font-size:11.5px;color:var(--ink-soft);background:var(--grey-tint);border-left:3px solid var(--navy);padding:7px 11px;border-radius:0 4px 4px 0;}
 
+  /* ---------- launchpads, modal, sandbox, connectors ---------- */
+  .btnsm{padding:3px 9px;font-size:10.5px;font-weight:500;border-radius:4px;}
+  .tray{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap;}
+  #modal{position:fixed;inset:0;background:rgba(1,22,59,.45);display:none;align-items:center;justify-content:center;z-index:60;}
+  #modal.open{display:flex;}
+  .mbox{background:#fff;border-radius:10px;padding:22px 24px;width:440px;max-width:92vw;box-shadow:0 24px 60px -20px rgba(1,22,59,.5);}
+  .mbox h3{color:var(--navy);font-size:16px;font-weight:700;margin-bottom:4px;}
+  .mbox p{font-size:12.5px;color:var(--ink-soft);}
+  .mbox label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--slate);display:block;margin:12px 0 4px;}
+  .mbox input,.mbox select{width:100%;border:1px solid var(--grey);border-radius:6px;padding:9px 11px;font-family:'Roboto',sans-serif;font-size:13px;background:#fff;}
+  .mbox .row{display:flex;gap:8px;margin-top:18px;justify-content:flex-end;}
+  .dot.conn{background:var(--green);box-shadow:0 0 0 3px var(--green-tint);animation:pulse 2.2s ease infinite;}
+  .blink{animation:blinkk 1.1s steps(2) infinite;}
+  @keyframes blinkk{50%{opacity:.3;}}
+  details.tier{margin-bottom:20px;}
+  details.tier summary{cursor:pointer;font-weight:700;color:var(--navy);font-size:15px;padding:6px 0;list-style-position:inside;}
+  details.tier summary .meta{font-weight:400;}
+  .dot.off{background:var(--grey);box-shadow:0 0 0 3px var(--grey-tint);}
+  .sbgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+  .sbcol{border:1px solid var(--grey);border-radius:6px;padding:10px 12px;font-size:12.5px;color:var(--ink-soft);background:var(--grey-tint);}
+  .sbcol.new{background:var(--green-tint);border-color:#b7d8c4;}
+  .sbcol .sbh{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--slate);margin-bottom:5px;}
+  textarea.sbprompt{width:100%;min-height:96px;border:1px solid var(--grey);border-radius:6px;font-family:ui-monospace,Menlo,monospace;font-size:12px;padding:10px;color:var(--ink);resize:vertical;}
+  .setrow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px dashed var(--grey);}
+  .setrow:last-child{border-bottom:none;}
+  .setrow .sl{flex:1;}
+  .setrow .sl b{font-size:13.5px;color:var(--ink);}
+  .setrow .sl .meta{display:block;margin-top:2px;}
+  .setrow input,.setrow select{width:110px;border:1px solid var(--grey);border-radius:6px;padding:8px 10px;font-family:'Roboto',sans-serif;font-size:13px;background:#fff;}
+
   #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--navy);color:#fff;
     padding:11px 22px;border-radius:8px;font-size:13px;font-weight:500;opacity:0;transition:all .3s;z-index:50;box-shadow:0 12px 30px -10px rgba(1,22,59,.5);}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -206,6 +236,7 @@
 </div>
 
 <div id="toast"></div>
+<div id="modal" onclick="if(event.target===this)closeModal()"></div>
 
 <script>
 /* =====================================================================
@@ -215,28 +246,31 @@
    ===================================================================== */
 
 const PEOPLE = {
-  coordinator:{ name:"Aoife",  fn:"AI Hub Coordinator", note:"Super-operator: sees every queue" },
-  sales:      { name:"Conor",  fn:"Sales & Marketing",  note:"Pipeline, proposals, content" },
-  talent:     { name:"Maeve",  fn:"Talent / Resourcing", note:"Matching, bench, contractors" },
-  delivery:   { name:"Sarah",  fn:"Client Delivery",    note:"Projects, RAG, SOPs" },
-  finance:    { name:"Liam",   fn:"Finance",            note:"Margin, EI grant, invoices" },
-  exec:       { name:"Adelin", fn:"Leadership",         note:"KPIs, sign-offs, portfolio" },
+  coordinator:{ name:"Aoife",  fn:"AI Hub Operations",                note:"Agent health, adoption, every queue" },
+  sales:      { name:"Conor",  fn:"Sales & Marketing",                note:"Pipeline, proposals, content" },
+  talent:     { name:"Maeve",  fn:"Talent Acquisition & Resourcing",  note:"Matching, bench, contractors" },
+  delivery:   { name:"Sarah",  fn:"Client Delivery",                  note:"Projects, RAG, SOPs" },
+  finance:    { name:"Liam",   fn:"Finance",                          note:"Margin, EI grant, AR/AP" },
+  exec:       { name:"Adelin", fn:"Executive Leadership",             note:"Plan, sign-offs, portfolio" },
 };
+const ROLE_NAME = { coordinator:"Aoife", sales:"Conor", talent:"Maeve", delivery:"Sarah", finance:"Liam", exec:"Adelin" };
 
 const LINES = ["QA/RA","Staffing","Training","AI","Margin Improvement"];
 
 const NAV = [
-  { id:"today",     label:"Today",                ico:"●", roles:["coordinator","sales","talent","delivery","finance","exec"] },
-  { id:"approvals", label:"Approval queues",      ico:"✓", roles:["coordinator","sales","talent","delivery","finance","exec"], badge:qCount },
-  { id:"chains",    label:"Process chains",       ico:"⛓", roles:["coordinator","sales","talent","delivery","finance","exec"], badge:blockedCount },
-  { id:"workbench", label:"Workbench",            ico:"◆", roles:["coordinator","sales","talent","delivery","finance","exec"] },
-  { id:"kpis",      label:"KPIs & reports",       ico:"▦", roles:["coordinator","sales","talent","delivery","finance","exec"] },
-  { id:"triggers",  label:"Workflows & triggers", ico:"⚡", roles:["coordinator"] },
-  { id:"provenance",label:"Provenance & cost",    ico:"❖", roles:["coordinator","finance","exec"] },
-  { id:"engines",   label:"Engine configuration", ico:"⚙", roles:["coordinator"] },
+  { id:"today",     label:"Today",                ico:"●", g:1, roles:["coordinator","sales","talent","delivery","finance","exec"] },
+  { id:"approvals", label:"Approval queues",      ico:"✓", g:1, roles:["coordinator","sales","talent","delivery","finance","exec"], badge:qCount },
+  { id:"chains",    label:"Process chains",       ico:"⛓", g:1, roles:["coordinator","sales","talent","delivery","finance","exec"], badge:blockedCount },
+  { id:"workbench", label:"Workbench",            ico:"◆", g:2, roles:["coordinator","sales","talent","delivery","finance","exec"] },
+  { id:"kpis",      label:"KPIs & reports",       ico:"▦", g:2, roles:["coordinator","sales","talent","delivery","finance","exec"] },
+  { id:"connectors",label:"SaaS connectors",      ico:"⇄", g:2, roles:["coordinator"] },
+  { id:"settings",  label:"Settings & rules",     ico:"⊕", g:2, roles:["coordinator","finance"] },
+  { id:"triggers",  label:"Workflows & triggers", ico:"⚡", g:2, roles:["coordinator"] },
+  { id:"provenance",label:"Provenance & cost",    ico:"❖", g:2, roles:["coordinator","finance","exec"] },
+  { id:"engines",   label:"Engine configuration", ico:"⚙", g:2, roles:["coordinator"] },
 ];
 
-const state = { role:"coordinator", page:"today", lineFilter:"All", cleared:0, minutesSaved:0 };
+const state = { role:"coordinator", page:"today", lineFilter:"All", kpiTab:"Company", cleared:0, minutesSaved:0 };
 
 /* ---------------- queue items ----------------
    approver: which person's queue it sits in now.
@@ -268,7 +302,7 @@ let ITEMS = [
   { id:"lu1", approver:"sales", line:"AI", engine:"Retrieve", model:"Sonnet", tokens:"6.4k", ts:"Today 07:20", mins:60,
     group:"Pre-sales triage (LUCE)",
     title:"Pre-Sales Context Brief: NovaMed — review within 24h SLA",
-    body:"LUCE scraped public regulatory history: 1 FDA 483 (2024, design controls), no warning letters, eQMS is TrackWise. Likely trigger: CAPA backlog. Provisional mapping: Track A Discovery Workshop. Brief attached per SOP-AIS-002 Stage 1.",
+    body:"LUCE scraped public regulatory history: 1 FDA 483 (2024, design controls), no warning letters, eQMS is TrackWise. Likely trigger: CAPA backlog. Provisional mapping: Track A Discovery Workshop. <b>Intent metadata (Marketing → Sales):</b> target downloaded the EU-MDR compliance playbook, bypassed the introductory blog, and flags 1 open FDA 483 design-control warning — high purchase intent, technical buyer.",
     caveat:"Gate: leads that are pure technology implementation (no adoption, training or GxP component) are out of scope; flag to leadership instead.",
     trail:["LUCE (Retrieve + Extract) → Conor"],
     actions:["Mark reviewed: proceed to qualification","Out of scope: flag to leadership"] },
@@ -278,6 +312,12 @@ let ITEMS = [
     body:"Per the SOP-AIS-002 quality checklist: executive summary does not open with verbatim client language, and next steps lack a named owner and date. Day 4 of the 5-day conversion window. Suggested fixes drafted inline.",
     trail:["Audit engine → Conor"],
     actions:["Apply fixes & approve for issue"] },
+  { id:"mq1", approver:"sales", line:"QA/RA", engine:"Extract", model:"Haiku", tokens:"0.4k", ts:"Today 09:42", mins:25,
+    group:"Content harvesting (Delivery → Marketing)",
+    title:"High-value client quote captured from the ARIA sync",
+    body:"The Extract engine intercepted verbal praise during transcript parsing: <b>'This compliance audit tool saved us weeks of preparation before our inspection.'</b> Speaker: client QA Director. Approve to write to the Branded Reference Library and Proposal Assets folder (usage permission flag attached for the client to confirm).",
+    trail:["Extract engine (ARIA transcript) → Conor"],
+    actions:["Approve to Reference Library"] },
   { id:"rr1", approver:"sales", line:"AI", engine:"Audit", model:"Haiku", tokens:"0.7k", ts:"Today 06:30", mins:20,
     group:"Account expansion (30-60-90)",
     title:"Retainer alert: Adoption Management tranche 81% consumed (12.2 of 15h)",
@@ -304,6 +344,13 @@ let ITEMS = [
     title:"Sprint 14 brief: AI Engineer (LUCE ingestion pipeline)",
     body:"Drafted from the approved Asana spec. Deliverables: ingestion connector, unit tests, handover note. SLA: 10 working days from acceptance. Add context before sending.",
     trail:["Draft engine → Maeve"] },
+  { id:"tsd1", approver:"talent", line:"QA/RA", engine:"Retrieve", model:"Sonnet", tokens:"2.6k", ts:"Today 08:12", mins:40, flagged:true,
+    group:"Shadow demand forecast (Sales → Talent)",
+    title:"70% probability: MedDev QA Remediation Ph1 needs 2 Senior QA Validation engineers from 1 July",
+    body:"Auto-generated when the MedDev SOW reached drafting. Bench scan at the start date: <b>0 available internal resources found</b> (M.K. is matched to the backfill; D.O. is mid-band). Recommendation: soft-scope the external bench immediately so the onboarding chain is not the bottleneck if it signs.",
+    next:{ to:"sales", reason:"confirm likely start date and seniority mix before external soft-scoping" },
+    trail:["Retrieve engine (pipeline watch) → Maeve"],
+    actions:["Soft-scope external bench"] },
 
   /* --- Client Delivery (Sarah) --- */
   { id:"da1", approver:"delivery", line:"QA/RA", engine:"Extract", model:"Haiku → Sonnet", tokens:"4.2k", ts:"Today 09:42", mins:25,
@@ -322,6 +369,13 @@ let ITEMS = [
     body:"Resourcing question raised at 00:38. The agent suggests routing this to Talent rather than holding it in Delivery.",
     next:{ to:"talent", reason:"availability and allocation sit with Resourcing" },
     trail:["Extract engine → Sarah"] },
+  { id:"da4", approver:"delivery", line:"QA/RA", engine:"Audit", model:"Sonnet", tokens:"3.8k", ts:"Today 09:42", mins:35, flagged:true,
+    group:"Meeting actions: Client sync, ARIA delivery (Mon 09:30)",
+    title:"Extracted task: review the client's cleanroom SOPs before the audit window",
+    body:"Transcript 00:52:10 — client asked Trinzo to 'take a look at the cleanroom SOPs too while you're in there'.",
+    caveat:"Scope-creep guardrail: the Audit engine checked this against the active SOW clauses in SharePoint — it does not map to any active deliverable. Choose: process as out-of-scope (drafts a change-control SOW for Sales) or absorb the margin variance (logged to Margin Watch).",
+    trail:["Extract + Audit engines → Sarah"],
+    actions:["Out-of-scope: draft change-control SOW","Absorb margin variance"] },
   { id:"dr1", approver:"delivery", line:"AI", engine:"Draft", model:"Sonnet", tokens:"12.4k", ts:"Today 08:00", mins:170, rag:true,
     group:"Status reporting",
     title:"Bi-weekly RAG status report: ARIA · LUCE · Audit Tool",
@@ -410,7 +464,7 @@ let HANDOFFS = [
    (people, agents, or functions like IT/TA) without needing new roles.
    s: done | active | blocked | pending */
 let CHAINS = [
-  { id:"ch1", name:"Sales pipeline — AI Adoption", src:"SOP-AIS-002 · 8-stage lifecycle", line:"AI",
+  { id:"ch1", own:"sales", name:"Sales pipeline — AI Adoption", src:"SOP-AIS-002 · 8-stage lifecycle", line:"AI",
     instance:"NovaMed · Discovery Workshop (Track A)",
     steps:[
       {n:"Lead intake + LUCE brief", o:"LUCE → Conor", s:"done", note:"brief reviewed in 18h (24h SLA)"},
@@ -420,7 +474,7 @@ let CHAINS = [
       {n:"SOW (ARIA draft)", o:"ARIA → Conor", s:"pending", note:"Track A fixed-price template"},
       {n:"Signed → onboarding chain", o:"Sarah", s:"pending", note:"fires chain below on signature"}],
     gate:"Gates from the SOP: proposals issued within 5 working days of discovery convert at roughly double the rate. CEO approval required above €150K. Track B adds technical architecture review and the 30/40/30 milestone structure."},
-  { id:"ch2", name:"SOW-signed onboarding", src:"PM maps + mural workshop", line:"QA/RA",
+  { id:"ch2", own:"delivery", name:"SOW-signed onboarding", src:"PM maps + mural workshop", line:"QA/RA",
     instance:"MedDev QA remediation · SOW-2026-041",
     steps:[
       {n:"SOW breakdown", o:"Extract engine → Sarah", s:"active", note:"6h elapsed · 24h SLA"},
@@ -432,7 +486,7 @@ let CHAINS = [
       {n:"Burn sheet", o:"Agent → Sarah", s:"pending", note:"pre-filled from SOW + Region Cal"},
       {n:"Expense sheet", o:"Sarah", s:"pending", note:"per consultant, from SOW value"}],
     gate:"Lesson encoded from the maps: IT onboarding is always the critical path, not the project work. A blocked step alerts its owner and the Coordinator automatically."},
-  { id:"ch3", name:"Month-end close", src:"Delivery + Finance maps · gated", line:"Cross-line",
+  { id:"ch3", own:"finance", name:"Month-end close", src:"Delivery + Finance maps · gated", line:"Cross-line",
     instance:"May 2026 · all active projects",
     steps:[
       {n:"Month-end reminder", o:"Agent → PSOHub users", s:"done"},
@@ -444,7 +498,7 @@ let CHAINS = [
       {n:"CD review", o:"Liam → Sarah", s:"pending"},
       {n:"Submit to client", o:"Liam", s:"pending", note:"human send, always"}],
     gate:"Gate from the maps: Finance starts only when PM Approved is set. The agent runs every reconciliation and queues exceptions only; matches pass through silently."},
-  { id:"ch4", name:"Training content production", src:"SOP-TC-001 · phase-gated", line:"Training",
+  { id:"ch4", own:"delivery", name:"Training content production", src:"SOP-TC-001 · phase-gated", line:"Training",
     instance:"Olympus FDA compliance programme",
     steps:[
       {n:"Phase 0: brief + research", o:"AI team", s:"done", note:"project plan signed"},
@@ -456,7 +510,7 @@ let CHAINS = [
       {n:"Phase 5a: SCORM / LMS", o:"AI team", s:"pending", note:"SCORM 1.2 confirmed at brief"},
       {n:"Final assembly + sign-off", o:"PM", s:"pending", note:"bracket scan + AI disclosure"}],
     gate:"Content freeze: all decks lock 5 business days before delivery for the GxP SME window. The dashboard counts down to each freeze and flags at-risk programmes."},
-  { id:"ch5", name:"Marketing flywheel", src:"Mural workshop · Sales & Marketing", line:"AI",
+  { id:"ch5", own:"sales", name:"Marketing flywheel", src:"Mural workshop · Sales & Marketing", line:"AI",
     instance:"Case study: pharma Copilot programme",
     steps:[
       {n:"Engagement closed", o:"Sarah", s:"done", note:"CSAT 4.8 · day-30 call booked"},
@@ -466,7 +520,7 @@ let CHAINS = [
       {n:"Derivatives: posts + newsletter", o:"Agent → Conor", s:"pending", note:"flywheel topping reused"},
       {n:"Publish + sales enablement", o:"Conor", s:"pending", note:"feeds proposal library + reference list"}],
     gate:"Per the workshop's Sales & Marketing map (marketing operations: branding, lead generation, market positioning) and the Revenue SOP: every close feeds marketing, every asset feeds Lead to Opportunity. Nothing auto-publishes."},
-  { id:"ch6", name:"Recruiting: requirement → offer", src:"Mural workshop · Talent & Acquisition", line:"Staffing",
+  { id:"ch6", own:"talent", name:"Recruiting: requirement → offer", src:"Mural workshop · Talent & Acquisition", line:"Staffing",
     instance:"Senior QA consultant · MedDev backfill",
     steps:[
       {n:"Sales reach-out with requirements", o:"Conor → Maeve", s:"done"},
@@ -484,26 +538,26 @@ let CHAINS = [
 /* ---------------- role workspace data ----------------
    What each role watches daily. All mock; refresh resets. */
 let PIPELINE = [
-  { opp:"Brightcare: audit-readiness expansion", line:"QA/RA", stage:"Lead", value:"€45K", next:"LUCE brief generating", src:"Delivery referral (Sarah, today)" },
-  { opp:"Acme Pharma: POC Factory", line:"AI", stage:"Qualified", value:"€200K", next:"Schedule discovery call this week" },
-  { opp:"NovaMed: Discovery Workshop", line:"AI", stage:"Proposal", value:"€30K", next:"Issue proposal: day 3 of 5-day window" },
-  { opp:"Thornfield Bio: GxP training", line:"Training", stage:"Proposal", value:"€30K", next:"Fix 2 QC findings: day 4 of 5" },
-  { opp:"MedDev: QA remediation Ph1", line:"QA/RA", stage:"SOW", value:"€86K", next:"Margin check with Liam, then issue" },
+  { opp:"Brightcare: audit-readiness expansion", line:"QA/RA", stage:"Lead", value:"€45K", val:45, win:30, next:"LUCE brief generating", src:"Delivery referral (Sarah, today)" },
+  { opp:"Acme Pharma: POC Factory", line:"AI", stage:"Qualified", value:"€200K", val:200, win:45, next:"Schedule discovery call this week" },
+  { opp:"NovaMed: Discovery Workshop", line:"AI", stage:"Proposal", value:"€30K", val:30, win:9, next:"Issue proposal: day 3 of 5-day window" },
+  { opp:"Thornfield Bio: GxP training", line:"Training", stage:"Proposal", value:"€30K", val:30, win:6, next:"Fix 2 QC findings: day 4 of 5" },
+  { opp:"MedDev: QA remediation Ph1", line:"QA/RA", stage:"SOW", value:"€86K", val:86, win:12, next:"Margin check with Liam, then issue" },
 ];
 const STAGECHIP = { Lead:"neutral", Qualified:"retrieve", Discovery:"draft", Proposal:"draft", SOW:"amber", Signed:"green" };
 
 const BENCH = [
-  { name:"Senior QA consultant (M.K.)", rate:"Senior band · €760/day", avail:"Now", match:"87% → MedDev backfill, awaiting Sarah's fit check", state:"matched" },
-  { name:"Validation engineer (D.O.)", rate:"Mid band · €640/day", avail:"24 Jun (rolls off Brightcare)", match:"No onward assignment; sell-on routed to Sales", state:"alert" },
-  { name:"AI engineer (contractor)", rate:"Senior band · €820/day", avail:"Committed: sprint 14", match:"LUCE ingestion pipeline", state:"engaged" },
-  { name:"Regulatory SME (S.B.)", rate:"Senior band · €880/day", avail:"50% from July", match:"Soft-held: NovaMed discovery if it signs", state:"soft" },
+  { name:"Senior QA consultant (M.K.)", rate:"Senior band · €760/day", avail:"Now", match:"87% → MedDev backfill, awaiting Sarah's fit check", state:"matched", occ:["Free","Booked: MedDev","Booked: MedDev"] },
+  { name:"Validation engineer (D.O.)", rate:"Mid band · €640/day", avail:"24 Jun (rolls off Brightcare)", match:"No onward assignment; sell-on routed to Sales", state:"alert", occ:["Brightcare (ends 24 Jun)","Unassigned ⚠","Unassigned ⚠"] },
+  { name:"AI engineer (contractor)", rate:"Senior band · €820/day", avail:"Committed: sprint 14", match:"LUCE ingestion pipeline", state:"engaged", occ:["LUCE sprint 14","LUCE sprint 15","Free"] },
+  { name:"Regulatory SME (S.B.)", rate:"Senior band · €880/day", avail:"50% from July", match:"Soft-held: NovaMed discovery if it signs", state:"soft", occ:["Engaged","50% soft-held: NovaMed","50% free"] },
 ];
 const BENCHCHIP = { matched:"green", alert:"red", engaged:"neutral", soft:"amber" };
 
 let PROJECTS = [
   { p:"ARIA · Medtronic", line:"QA/RA", rag:"green", csat:"4.6/5", note:"UAT w/c 16 Jun; client engaged and happy", opp:"client mentioned a second site needing the same remediation" },
   { p:"LUCE", line:"AI", rag:"amber", csat:"–", note:"connector behind; sprint 14 starting late" },
-  { p:"Audit Tool", line:"AI", rag:"red", csat:"3.9/5", note:"deliverable past SLA; at-risk account, escalation in motion" },
+  { p:"Audit Tool", line:"AI", rag:"red", csat:"3.9/5", note:"deliverable past SLA; at-risk account, escalation in motion", arOverdue:true },
   { p:"Olympus training", line:"Training", rag:"amber", csat:"–", note:"content freeze in 2 days; SME window tight", opp:"sponsor asked about a follow-on module for lab analysts" },
 ];
 
@@ -536,12 +590,50 @@ const ADOPTION = [
   { who:"Adelin (Leadership)", cleared:3, avg:"26h", oldest:"3 days", ok:false, note:"sign-offs batch weekly: consider a Friday reminder" },
 ];
 
+/* executive cockpit data */
+const PLAN = {
+  annual:"FY2026: €5.0M revenue at 33% blended margin. Grow the AI line to €1.2M, hold QA/RA leadership, lift utilisation to 85%, and productise the four engines (first external licence by Q4).",
+  quarter:"Q2 blueprint: land 2 Track B engagements (1 signed), launch the back-office control surface internally (live), hold CSAT ≥ 4.5, close the EI grant evidence gap (1 item open), proposal turnaround ≤ 5 days (3.8 avg).",
+  bars:[
+    { label:"Revenue €5.0M FY", pct:46, note:"€2.3M YTD · ahead of straight-line" },
+    { label:"AI line €1.2M FY", pct:38, note:"€456k YTD · NovaMed + Acme in pipeline" },
+    { label:"Utilisation 85%", pct:92, note:"78% actual vs 85% target" },
+    { label:"CSAT ≥ 4.5", pct:100, note:"4.5 current · 1 at-risk account" },
+  ],
+};
+let LEAD_ACTIONS = [
+  { what:"Approve the Q3 contractor rate-band review", owner:"Adelin", status:"open" },
+  { what:"Decide Audit Tool recovery plan (red, 60+ AR)", owner:"Sarah + Liam", status:"in motion" },
+  { what:"Sign the Medtronic batch 2 commercial framing", owner:"Conor", status:"done" },
+  { what:"Confirm EI second-signer cadence (Friday batch)", owner:"Adelin", status:"open" },
+];
+let SURVEYS = [
+  { title:"Q3 resource bottleneck evaluation", due:"Fri 13 Jun", target:"talent", done:false,
+    cascade:"Leadership survey flagged a resourcing bottleneck risk: review Q3 bench cover for Senior QA Validation roles against the live pipeline." },
+  { title:"AI adoption confidence pulse", due:"Mon 16 Jun", target:"coordinator", done:false,
+    cascade:"Leadership survey requested an adoption review: check queue-ageing outliers and propose one training intervention." },
+];
+
 const COMINGUP = [
   { when:"Thu 12 Jun", what:"Month-end close: time entry approvals due across 3 projects", who:"Delivery + Finance" },
   { when:"Mon 16 Jun", what:"Olympus content freeze deadline · bi-weekly RAG report due", who:"Delivery + GxP SME" },
   { when:"w/c 23 Jun", what:"NovaMed likely signs: onboarding chain fires, Regulatory SME needed at 50%", who:"Delivery + Talent + Finance" },
   { when:"24 Jun", what:"Validation engineer rolls off Brightcare: sell-on window open", who:"Talent + Sales" },
   { when:"27 Jun", what:"Adoption Management tranche expires: renewal call must happen first", who:"Sales + Leadership" },
+];
+
+/* ---------------- admin state: rules, delegation, connectors ---------------- */
+let SETTINGS = { marginFloor:25, transcriptMin:500, staleDays:5, queueAgeHours:48, arEscalationDays:60 };
+let DELEGATIONS = {};   /* who → backup */
+let CONNECTORS = [
+  { name:"Microsoft Teams", status:"live", engines:"Extract", last:"streaming · transcripts + channel scan" },
+  { name:"SharePoint", status:"live", engines:"Extract · Draft · Audit", last:"synced 4 min ago · archive of record" },
+  { name:"Asana", status:"live", engines:"Extract · Draft", last:"synced 11 min ago · tasks + specs" },
+  { name:"Salesforce", status:"live", engines:"Extract · Draft", last:"synced 6 min ago · leads + opportunities" },
+  { name:"PSOHub", status:"live", engines:"Extract · Audit", last:"synced 09:00 · time, rates, expenses" },
+  { name:"Xero", status:"live", engines:"Audit · Draft", last:"synced 06:30 · AR / AP" },
+  { name:"Spendesk", status:"live", engines:"Audit", last:"synced 06:30 · invoices + expense claims" },
+  { name:"HubSpot", status:"off", engines:"—", last:"not connected · placeholder" },
 ];
 
 let TRIGGERS = [
@@ -661,7 +753,199 @@ function saveEdit(id){
 function customAction(id, label){
   const item=ITEMS.find(i=>i.id===id);
   if(item && item.ei && /Verify/.test(label)){ assignItem(id,"exec",true); return; }
+  /* scope-creep guardrail: out-of-scope branch drafts a change-control SOW for Sales */
+  if(id==="da4" && /Out-of-scope/.test(label)){
+    ITEMS.push({ id:"cc1", approver:"sales", line:"QA/RA", engine:"Draft", model:"Sonnet", tokens:"4.4k", ts:"Just now", mins:45,
+      group:"Proposals & SOWs",
+      title:"Change-control SOW draft: ARIA cleanroom SOP review (out-of-scope request)",
+      body:"Auto-drafted from the guardrail decision in Delivery. Scope: review of client cleanroom SOPs, est. 3 consultant-days at the QA/RA rate card. References the originating transcript timestamp and the SOW clause check.",
+      next:{ to:"finance", reason:"margin check before issue, per the standard SOW path" },
+      trail:["Audit engine (guardrail) → Sarah → Conor"] });
+    HANDOFFS.unshift({ date:"Today", item:"Change-control SOW: ARIA cleanroom SOPs", from:"Sarah", to:"Conor", reason:"out-of-scope client request intercepted by guardrail", outcome:"draft in Sales queue" });
+    resolveItem(id,"approved","Out-of-scope: change-control SOW drafted and queued to Sales");
+    return;
+  }
+  if(id==="da4"){
+    CORRECTIONS.unshift({ date:"Today", agent:"Audit engine (guardrail)", type:"Margin variance absorbed", by:PEOPLE[state.role].name,
+      detail:"ARIA cleanroom SOP review absorbed without change control; logged to Margin Watch for the month-end review." });
+    resolveItem(id,"approved","Margin variance absorbed: logged to Margin Watch");
+    return;
+  }
   resolveItem(id,"approved",label+": actioned and logged");
+}
+
+/* simulated deep links into the SaaS layer */
+function launch(app, target){
+  toast(`Opening ${app}: ${target} — simulated deep link, synchronised across all active roles`);
+}
+
+/* ---------------- connectors ---------------- */
+function vConnectors(){
+  return `
+  <div class="pagehead"><h2>SaaS connectors</h2>
+  <p>The integration grid behind the engines: every data stream the agents read from or write to, with live API health. Connecting a new app binds its stream to one of the four foundational engines — configuration, not code.</p></div>
+  <div class="grid g4" style="margin-bottom:16px">
+    ${CONNECTORS.map((c,i)=>`
+      <div class="card">
+        <h3 style="font-size:14px">${c.name}</h3>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span class="dot ${c.status==='live'?'conn':c.status==='connecting'?'flight':'off'}" style="margin-top:0"></span>
+          <span class="chip ${c.status==='live'?'green':c.status==='connecting'?'amber':'neutral'}">${c.status==='live'?'API healthy':c.status==='connecting'?'connecting…':'not connected'}</span>
+        </div>
+        <div class="meta">Bound engines: <b style="color:var(--ink-soft)">${c.engines}</b></div>
+        <div class="meta" style="margin-top:3px">${c.last}</div>
+        ${c.status==='off'?`<div class="qactions"><button class="btn ghost btnsm" onclick="openConnect('${c.name}')">Connect</button></div>`:""}
+      </div>`).join("")}
+  </div>
+  <button class="btn approve" onclick="openConnect('')">+ Connect new app / SaaS</button>
+  <div class="footer-note">Credentials are stored in the platform vault, never in agent prompts. Every connector write goes through an approval queue; no stream gets direct write access to a system of record.</div>`;
+}
+
+function openConnect(name){
+  const m=document.getElementById("modal");
+  m.innerHTML=`<div class="mbox">
+    <h3>Connect new app / SaaS</h3>
+    <p>Step 1 of 2: credentials. Step 2: bind the stream to an engine. Mock flow — nothing leaves this page.</p>
+    <label>Application name</label><input id="cnName" value="${name||''}" placeholder="e.g. HubSpot">
+    <label>API key / OAuth client secret (mock)</label><input id="cnKey" placeholder="sk-••••••••••••" type="password">
+    <label>Bind data stream to engine</label>
+    <select id="cnEngine"><option>Extract</option><option>Draft</option><option>Audit</option><option>Retrieve</option></select>
+    <div class="row">
+      <button class="btn ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn approve" onclick="confirmConnect()">Authorise & bind</button>
+    </div>
+  </div>`;
+  m.classList.add("open");
+}
+function closeModal(){ document.getElementById("modal").classList.remove("open"); }
+function confirmConnect(){
+  const name=document.getElementById("cnName").value.trim()||"New app";
+  const eng=document.getElementById("cnEngine").value;
+  closeModal();
+  const existing=CONNECTORS.find(c=>c.name.toLowerCase()===name.toLowerCase());
+  const rec = existing || (CONNECTORS.push({name, engines:eng, last:""}), CONNECTORS[CONNECTORS.length-1]);
+  rec.status="connecting"; rec.engines=eng; rec.last="OAuth handshake in progress…";
+  render(); toast(`${name}: OAuth handshake started…`);
+  setTimeout(()=>{
+    rec.status="live"; rec.last="synced just now · first ingest queued for approval";
+    render(); toast(`${name} connected: stream bound to the ${eng} engine and written to the schema layer`);
+  }, 1800);
+}
+
+/* ---------------- settings & rules ---------------- */
+function vSettings(){
+  const ppl=Object.entries(PEOPLE);
+  return `
+  <div class="pagehead"><h2>Settings & rules</h2>
+  <p>The heuristic thresholds the Audit and Extract engines run against, adjustable without touching the build. Changes are written to the schema layer and apply to every queue and chain immediately.</p></div>
+
+  <div class="card" style="margin-bottom:16px">
+    <h3>Heuristic thresholds</h3>
+    <div class="setrow"><div class="sl"><b>Minimum project margin floor (%)</b>
+      <span class="meta">The Audit engine raises a Margin Watch alert when any engagement drops below this.</span></div>
+      <input type="number" id="stMargin" value="${SETTINGS.marginFloor}" min="0" max="80"></div>
+    <div class="setrow"><div class="sl"><b>Transcript poka-yoke ceiling (words)</b>
+      <span class="meta">Transcripts below this word count are held back; no partial actions are extracted.</span></div>
+      <input type="number" id="stWords" value="${SETTINGS.transcriptMin}" min="100" step="50"></div>
+    <div class="setrow"><div class="sl"><b>Stale task alarm (days)</b>
+      <span class="meta">Tasks untouched longer than this mark their project's data confidence as LOW in RAG reports.</span></div>
+      <select id="stStale">${[3,5,7,10].map(d=>`<option ${d===SETTINGS.staleDays?'selected':''}>${d}</option>`).join("")}</select></div>
+    <div class="setrow"><div class="sl"><b>Queue ageing escalation clock (hours)</b>
+      <span class="meta">Items pending longer than this flag on the Coordinator's adoption board.</span></div>
+      <input type="number" id="stAge" value="${SETTINGS.queueAgeHours}" min="4" step="4"></div>
+    <div class="setrow"><div class="sl"><b>AR overdue escalation (days)</b>
+      <span class="meta">Finance cascade: Xero ledger entries older than this write a flashing invoice-overdue flag onto the matching project's delivery row.</span></div>
+      <input type="number" id="stAr" value="${SETTINGS.arEscalationDays}" min="15" step="15"></div>
+    <div class="qactions" style="margin-top:12px"><button class="btn approve" onclick="saveRules()">Apply rules</button>
+    <span class="meta">Applies to the Audit and Extract engines across all functions.</span></div>
+  </div>
+
+  <div class="card">
+    <h3>Auto-delegation routing</h3>
+    <p class="meta" style="margin-bottom:8px">Temporary out-of-office overrides: pending and future queue items for the absent person route automatically to the named backup. The handoff log records every redirected item.</p>
+    <div class="qactions">
+      <span style="font-size:13px">While</span>
+      <select class="assign-sel" id="dlWho">${ppl.map(([k,v])=>`<option value="${k}">${v.name} (${v.fn})</option>`).join("")}</select>
+      <span style="font-size:13px">is out of office, route their approvals to</span>
+      <select class="assign-sel" id="dlTo">${ppl.map(([k,v])=>`<option value="${k}">${v.name} (${v.fn})</option>`).join("")}</select>
+      <button class="btn approve" onclick="applyDelegation()">Apply</button>
+    </div>
+    <div style="margin-top:12px">
+      ${Object.keys(DELEGATIONS).length===0?'<span class="meta">No active delegations.</span>':
+        Object.entries(DELEGATIONS).map(([w,b])=>`<span class="chip amber" style="margin-right:6px">${PEOPLE[w].name} → ${PEOPLE[b].name} (OOO)
+          <a style="cursor:pointer;margin-left:4px" onclick="endDelegation('${w}')">✕</a></span>`).join("")}
+    </div>
+  </div>
+  <div class="footer-note">Rule changes and delegations are themselves logged with who-changed-what in the provenance layer.</div>`;
+}
+
+function saveRules(){
+  SETTINGS.marginFloor=+document.getElementById("stMargin").value||SETTINGS.marginFloor;
+  SETTINGS.transcriptMin=+document.getElementById("stWords").value||SETTINGS.transcriptMin;
+  SETTINGS.staleDays=+document.getElementById("stStale").value||SETTINGS.staleDays;
+  SETTINGS.queueAgeHours=+document.getElementById("stAge").value||SETTINGS.queueAgeHours;
+  SETTINGS.arEscalationDays=+document.getElementById("stAr").value||SETTINGS.arEscalationDays;
+  const fm=ITEMS.find(i=>i.id==="fm1");
+  if(fm) fm.title=`Margin alert: Training engagement TR-204 at 18%, below the ${SETTINGS.marginFloor}% floor`;
+  const co=ITEMS.find(i=>i.id==="co1");
+  if(co) co.body=co.body.replace(/threshold: \d+/, "threshold: "+SETTINGS.transcriptMin);
+  /* finance cascade: the 60+ ledger bucket (€18K, Audit Tool client) flags delivery rows when inside the escalation window */
+  const cascaded = SETTINGS.arEscalationDays<=60;
+  PROJECTS.forEach(p=>{ if(p.p.includes("Audit Tool")) p.arOverdue=cascaded; });
+  render(); toast(`Rules updated: written to the schema layer${cascaded?"; finance cascade active: invoice-overdue flag on the delivery board":"; finance cascade cleared from the delivery board"} — synchronised across all active roles`);
+}
+
+function applyDelegation(){
+  const who=document.getElementById("dlWho").value, to=document.getElementById("dlTo").value;
+  if(who===to){ toast("Backup must be a different person"); return; }
+  DELEGATIONS[who]=to;
+  let moved=0;
+  ITEMS.filter(i=>i.status!=="done" && i.approver===who).forEach(i=>{
+    i.trail=(i.trail||[]); i.trail.push(`${PEOPLE[who].name} → ${PEOPLE[to].name} (auto, OOO)`);
+    i.approver=to; moved++;
+  });
+  HANDOFFS.unshift({ date:"Today", item:`${moved} pending items (bulk)`, from:PEOPLE[who].name, to:PEOPLE[to].name, reason:"out-of-office auto-delegation", outcome:"re-routed" });
+  render(); toast(`${moved} pending items re-routed from ${PEOPLE[who].name} to ${PEOPLE[to].name}; future items follow until ended`);
+}
+function endDelegation(who){ delete DELEGATIONS[who]; render(); toast(`Delegation ended for ${PEOPLE[who].name}; new items route normally`); }
+
+/* ---------------- prompt tuning sandbox ---------------- */
+const SANDBOX_CASES = {
+  "Tone edit before approval":{
+    prompt:"You draft LinkedIn posts from webinar transcripts.\nVoice: confident, plain English. UK spelling.\nBanned words: revolutionary, game-changing, thrilled, delighted.\nStructure: hook line, one concrete insight, one CTA. Max 120 words.",
+    orig:"We're thrilled to announce a revolutionary approach to GxP validation that will completely transform how your team works…",
+    fixed:"A practical approach to GxP validation: what changed in our client's audit prep, and why the 80/10/10 split mattered more than the tooling." },
+  "Wrong owner assigned":{
+    prompt:"You extract action items from meeting transcripts.\nOwner attribution: resolve speakers against the attendee role map before assigning.\nIf attribution confidence < 0.8, mark owner as TENTATIVE and flag for review.",
+    orig:"Action: Sarah to deliver the ingestion connector by Friday.",
+    fixed:"Action: contractor (AI Engineer) to deliver the ingestion connector by Friday — speaker disambiguated via the attendee role map (confidence 0.93)." },
+  "Status overridden after approval":{
+    prompt:"You synthesise RAG status from Asana, SharePoint and transcripts.\nNew rule: check transcripts for client-side dependencies not present in Asana; if found, cap status at Amber and cite the source.",
+    orig:"LUCE: Green — all Asana tasks on track.",
+    fixed:"LUCE: Amber — Asana on track, but the Tue transcript (00:22) records a client-side dependency on tenant access; cited in the report." },
+};
+function runSandbox(){
+  const sel=document.getElementById("sbCase").value;
+  const out=document.getElementById("sbResult");
+  const c=SANDBOX_CASES[sel]||Object.values(SANDBOX_CASES)[0];
+  out.innerHTML=`<div class="meta" style="padding:14px 0">Running batch regression across 14 historical Correction_Log entries…</div>`;
+  toast("Regression batch started against the Correction_Log history");
+  setTimeout(()=>{
+    out.innerHTML=`
+      <div class="sbgrid">
+        <div class="sbcol"><div class="sbh">Original output (logged correction)</div>${c.orig}</div>
+        <div class="sbcol new"><div class="sbh">New result (modified prompt)</div>${c.fixed}</div>
+      </div>
+      <div style="margin-top:10px"><span class="chip green">0 regressions across 14 historical entries</span>
+      <span class="chip neutral">safe to deploy</span>
+      <button class="btn approve btnsm" style="margin-left:8px" onclick="toast('Prompt version deployed: logged with model version and approver in provenance')">Deploy to live topping</button></div>`;
+  },1400);
+}
+function sandboxLoadCase(){
+  const sel=document.getElementById("sbCase").value;
+  const c=SANDBOX_CASES[sel];
+  document.getElementById("sbPrompt").value=c?c.prompt:"// baseline prompt rules for this topping";
+  document.getElementById("sbResult").innerHTML="";
 }
 
 function fireTrigger(id){
@@ -707,19 +991,21 @@ function wbReview(){
   state.page="approvals"; render();
 }
 
-/* delivery → sales cross-sell handoff */
+/* delivery → sales cross-sell handoff, with simulated Salesforce webhook write */
 function passToSales(idx){
   const proj = PROJECTS[idx]; if(!proj || proj.passed) return;
   proj.passed = true;
+  const sfId = "SF-L-" + String(Date.now()).slice(-6);
   PIPELINE.unshift({ opp:`${proj.p.split(" ·")[0]}: ${proj.opp.slice(0,40)}…`, line:proj.line, stage:"Lead",
-    value:"TBC", next:"LUCE brief generating", src:`Delivery referral (${PEOPLE[state.role].name}, just now)` });
+    value:"TBC", next:"LUCE brief generating", src:`Delivery referral (${PEOPLE[state.role].name}, just now) · Salesforce ${sfId}` });
   ITEMS.push({ id:"ld"+Date.now(), approver:"sales", line:proj.line, engine:"Extract", model:"Haiku", tokens:"0.8k",
     ts:"Just now", mins:30, group:"Pre-sales triage (LUCE)",
     title:`New lead from Delivery: ${proj.p}`,
-    body:`Spotted on the ground: ${proj.opp}. Project context, CSAT (${proj.csat}) and the relevant capability sheet attached. LUCE brief queued.`,
-    trail:[`${PEOPLE[state.role].name} (Delivery) → Conor`] });
-  HANDOFFS.unshift({ date:"Today", item:`Lead: ${proj.p}`, from:PEOPLE[state.role].name, to:"Conor", reason:"opportunity spotted inside a current client", outcome:"in pipeline as Lead" });
-  render(); toast("Lead passed to Sales: pipeline updated, handoff logged");
+    body:`Spotted on the ground: ${proj.opp}. Project context, CSAT (${proj.csat}) and the relevant capability sheet attached. Webhook write complete: registered in Salesforce as drafted Lead <b>${sfId}</b>. LUCE brief queued.`,
+    trail:[`${PEOPLE[state.role].name} (Delivery) → Salesforce webhook → Conor`] });
+  HANDOFFS.unshift({ date:"Today", item:`Lead: ${proj.p} (Salesforce ${sfId})`, from:PEOPLE[state.role].name, to:"Conor", reason:"opportunity spotted inside a current client", outcome:"drafted Lead in Salesforce" });
+  render();
+  toast(`Webhook → Salesforce: drafted Lead ${sfId} registered; pipeline updated and synchronised across all active roles`);
 }
 
 /* ---------------- rendering ---------------- */
@@ -735,52 +1021,100 @@ function setLine(l){ state.lineFilter=l; render(); }
 
 function render(){
   document.getElementById("roleSwitch").innerHTML = Object.entries(PEOPLE).map(([k,v])=>
-    `<button class="${state.role===k?'active':''}" onclick="setRole('${k}')" title="${v.fn}">${v.name}</button>`).join("");
+    `<button class="${state.role===k?'active':''}" onclick="setRole('${k}')" title="${v.name}">${v.fn}</button>`).join("");
   const p=PEOPLE[state.role];
-  document.getElementById("roleNote").textContent = `${p.fn}: ${p.note}`;
+  document.getElementById("roleNote").textContent = `${p.name} · ${p.note}`;
 
+  const navLink = n => {
+    const b=n.badge?n.badge(state.role):0;
+    return `<a class="${state.page===n.id?'active':''}" onclick="setPage('${n.id}')">
+      <span class="ico">${n.ico}</span>${n.label}${b?`<span class="badge">${b}</span>`:""}</a>`;
+  };
+  const g1 = NAV.filter(n=>n.g===1 && n.roles.includes(state.role));
+  const g2 = NAV.filter(n=>n.g===2 && n.roles.includes(state.role));
   document.getElementById("sidebar").innerHTML =
-    `<div class="navhead">Control surface</div>` +
-    NAV.filter(n=>n.roles.includes(state.role)).map(n=>{
-      const b=n.badge?n.badge(state.role):0;
-      return `<a class="${state.page===n.id?'active':''}" onclick="setPage('${n.id}')">
-        <span class="ico">${n.ico}</span>${n.label}${b?`<span class="badge">${b}</span>`:""}</a>`;
-    }).join("");
+    `<div class="navhead">📥 Current workspace</div>` + g1.map(navLink).join("") +
+    (g2.length?`<div class="navhead" style="padding-top:18px">⚙️ Control & administration</div>` + g2.map(navLink).join(""):"");
 
   document.getElementById("view").innerHTML =
     ({today:vToday,approvals:vApprovals,chains:vChains,workbench:vWorkbench,kpis:vKPIs,
+      connectors:vConnectors,settings:vSettings,
       triggers:vTriggers,provenance:vProv,engines:vEngines})[state.page]();
 }
 
-/* ----- process chains view ----- */
+/* ----- process chains view (tiered by ownership) ----- */
 const SMARK = { done:"✓", active:"●", blocked:"⚠", pending:"○" };
+function chainCard(c){
+  const done=c.steps.filter(s=>s.s==="done").length;
+  const blocked=c.steps.some(s=>s.s==="blocked");
+  return `<div class="chain">
+    <div class="chead">
+      <h3>${c.name}</h3>
+      <span class="chip line">${c.line}</span>
+      <span class="chip neutral">${c.src}</span>
+      <span class="chip retrieve">owner: ${PEOPLE[c.own].fn}</span>
+      ${blocked?'<span class="chip red">blocked</span>':''}
+      <span class="inst" style="margin-left:auto">${c.instance} · ${done}/${c.steps.length} steps done</span>
+    </div>
+    <div class="steps">
+      ${c.steps.map(s=>`<div class="step ${s.s}">
+        <span class="smark">${SMARK[s.s]}</span>
+        <div class="sname">${s.n}</div>
+        <div class="sown">${s.o}</div>
+        ${s.note?`<div class="snote">${s.note}</div>`:""}
+      </div>`).join("")}
+    </div>
+    <div class="gatebar">${c.gate}</div>
+  </div>`;
+}
 function vChains(){
+  const r=state.role;
+  /* Executive privilege: leadership and AI Hub Ops see the macro dashboard of every live chain */
+  if(r==="exec"||r==="coordinator"){
+    return `
+    <div class="pagehead"><h2>Process chains — enterprise view</h2>
+    <p>Macro dashboard of every live chain in the company: health, cycle position and step milestones. Department heads see these same chains scoped to what they own and support.</p></div>
+    <div class="card" style="margin-bottom:16px">
+      <h3>All live chains <span class="chip neutral">${CHAINS.length} running</span></h3>
+      <table>
+        <tr><th>Chain</th><th>Owner</th><th>Progress</th><th>Current step</th><th>Health</th></tr>
+        ${CHAINS.map(c=>{
+          const done=c.steps.filter(s=>s.s==="done").length;
+          const cur=c.steps.find(s=>s.s==="blocked")||c.steps.find(s=>s.s==="active");
+          const blocked=c.steps.some(s=>s.s==="blocked");
+          return `<tr><td>${c.name}</td><td>${PEOPLE[c.own].fn}</td>
+            <td>${done}/${c.steps.length}</td>
+            <td>${cur?cur.n+" ("+cur.o+")":"complete"}</td>
+            <td>${blocked?'<span class="chip red">blocked</span>':'<span class="chip green">on track</span>'}</td></tr>`;
+        }).join("")}
+      </table>
+    </div>
+    ${CHAINS.map(chainCard).join("")}
+    <div class="footer-note">Chains are configurations, not code: trigger + steps + owners + gates. Each instantiates per opportunity, SOW, month or programme.</div>`;
+  }
+  const nm=ROLE_NAME[r];
+  const owned=CHAINS.filter(c=>c.own===r);
+  const support=CHAINS.filter(c=>c.own!==r && c.steps.some(s=>(s.o||"").includes(nm)));
+  const others=CHAINS.filter(c=>!owned.includes(c)&&!support.includes(c));
   return `
   <div class="pagehead"><h2>Process chains</h2>
-  <p>Multi-step processes from the mapped SOPs, shown as live chains: each step has an owner, a status and, where the SOP defines one, an SLA. Agents do the steps they can; humans clear the gates. A blocked step alerts its owner and the Coordinator. Step owners can include IT, TA or a client without needing a dashboard seat.</p></div>
-  ${CHAINS.map(c=>{
-    const done=c.steps.filter(s=>s.s==="done").length;
-    const blocked=c.steps.some(s=>s.s==="blocked");
-    return `<div class="chain">
-      <div class="chead">
-        <h3>${c.name}</h3>
-        <span class="chip line">${c.line}</span>
-        <span class="chip neutral">${c.src}</span>
-        ${blocked?'<span class="chip red">blocked</span>':''}
-        <span class="inst" style="margin-left:auto">${c.instance} · ${done}/${c.steps.length} steps done</span>
-      </div>
-      <div class="steps">
-        ${c.steps.map(s=>`<div class="step ${s.s}">
-          <span class="smark">${SMARK[s.s]}</span>
-          <div class="sname">${s.n}</div>
-          <div class="sown">${s.o}</div>
-          ${s.note?`<div class="snote">${s.note}</div>`:""}
-        </div>`).join("")}
-      </div>
-      <div class="gatebar">${c.gate}</div>
-    </div>`;
-  }).join("")}
-  <div class="footer-note">Chains are configurations, not code: trigger + steps + owners + gates. The sales chain instantiates per opportunity, the onboarding chain per signed SOW, the close chain per month, the content chain per programme.</div>`;
+  <p>Scoped to ${PEOPLE[r].fn}: the chains you own first, then the ones you take steps in, then everything else running across the company.</p></div>
+
+  <details class="tier" open>
+    <summary>Your owned processes <span class="meta">· ${owned.length} chain${owned.length===1?"":"s"} where ${PEOPLE[r].fn} holds the metric</span></summary>
+    ${owned.length?owned.map(chainCard).join(""):'<div class="empty">No chains owned by this function yet.</div>'}
+  </details>
+
+  <details class="tier" open>
+    <summary>Processes I participate in <span class="meta">· ${support.length} owned elsewhere, with your steps in them</span></summary>
+    ${support.length?support.map(chainCard).join(""):'<div class="empty">No supporting steps assigned.</div>'}
+  </details>
+
+  <details class="tier">
+    <summary>Cross-functional & all other processes <span class="meta">· ${others.length} running elsewhere in the company</span></summary>
+    ${others.length?others.map(chainCard).join(""):'<div class="empty">Nothing else running.</div>'}
+  </details>
+  <div class="footer-note">Chains are configurations, not code: trigger + steps + owners + gates. Each instantiates per opportunity, SOW, month or programme.</div>`;
 }
 
 /* ----- queue card ----- */
@@ -899,47 +1233,72 @@ function vToday(){
 function roleBoard(){
   const r = state.role;
 
-  if(r==="sales") return `
+  if(r==="sales"){
+    const praise = ITEMS.find(i=>i.id==="mq1" && i.status!=="done");
+    const deals = [...PIPELINE].sort((a,b)=>((b.val||10)/(b.win||30))-((a.val||10)/(a.win||30)));
+    return `
+  ${praise?`<div class="route" style="margin-bottom:14px"><b>Delivery harvester:</b> verbal client praise captured from the ARIA sync.
+    <a style="cursor:pointer;text-decoration:underline;color:var(--navy);font-weight:700" onclick="setPage('approvals')">Click to write to the Branded Reference Assets →</a></div>`:""}
   <div class="card" style="margin-bottom:14px">
-    <h3>Pipeline: leads & opportunities <span class="chip neutral">live from Salesforce + LUCE</span></h3>
+    <h3>Deal value & velocity board <span class="chip neutral">ranked: contract size × closing proximity</span></h3>
     <table>
-      <tr><th>Opportunity</th><th>Line</th><th>Stage</th><th>Value</th><th>Next action</th></tr>
-      ${PIPELINE.map(p=>`<tr><td>${p.opp}${p.src?`<br><span class="meta">↳ ${p.src}</span>`:""}</td>
-        <td>${p.line}</td><td><span class="chip ${STAGECHIP[p.stage]||'neutral'}">${p.stage}</span></td>
-        <td>${p.value}</td><td>${p.next}</td></tr>`).join("")}
+      <tr><th>#</th><th>Opportunity</th><th>Stage</th><th>Value</th><th>Closing window</th><th>Velocity</th><th>Next action</th></tr>
+      ${deals.map((p,n)=>`<tr><td>${n+1}</td><td>${p.opp}${p.src?`<br><span class="meta">↳ ${p.src}</span>`:""}
+        <div class="tray"><button class="btn ghost btnsm" onclick="launch('Salesforce','${p.opp.replace(/'/g,"")} record')">Salesforce ↗</button></div></td>
+        <td><span class="chip ${STAGECHIP[p.stage]||'neutral'}">${p.stage}</span></td>
+        <td><b>${p.value}</b></td>
+        <td>${p.win?p.win+" days":"TBC"}</td>
+        <td>${p.win&&p.win<=10?'<span class="chip red">hot</span>':p.win&&p.win<=30?'<span class="chip amber">warm</span>':'<span class="chip neutral">steady</span>'}</td>
+        <td>${p.next}</td></tr>`).join("")}
     </table>
-    <p class="meta" style="margin-top:8px">Total in play: €391K · weighted ~€168K. Leads referred by Delivery appear here automatically with project context attached.</p>
+    <p class="meta" style="margin-top:8px">Rank = value ÷ days to close. Thornfield and NovaMed are the velocity plays; Acme is the value play. Delivery referrals land here automatically with context attached.</p>
   </div>
-  <div class="grid g4">
+  <div class="grid g3">
     <div class="stat"><div class="label">Revenue MTD</div><div class="value">€412k</div><div class="sub">+8% vs May</div></div>
-    <div class="stat"><div class="label">Blended margin</div><div class="value">31%</div><div class="sub">target 33% · TR-204 alert live</div></div>
-    <div class="stat t"><div class="label">Pipeline cover</div><div class="value">2.8×</div><div class="sub">next two quarters</div></div>
-    <div class="stat t"><div class="label">Proposal window</div><div class="value">2 open</div><div class="sub">both inside the 5-day target</div></div>
+    <div class="stat t"><div class="label">Weighted pipeline</div><div class="value">€168K</div><div class="sub">of €391K total in play</div></div>
+    <div class="stat"><div class="label">Blended margin</div><div class="value">31%</div><div class="sub">vs 33% target · TR-204 alert live</div></div>
   </div>`;
+  }
 
   if(r==="talent") return `
-  <div class="card">
-    <h3>Bench: availability, rate, match <span class="chip neutral">PSOHub + consultant tracker</span></h3>
+  <div class="card" style="margin-bottom:14px">
+    <h3>Bench occupancy & demand tracker <span class="chip neutral">consultants × upcoming project timelines</span></h3>
     <table>
-      <tr><th>Consultant</th><th>Rate</th><th>Available</th><th>Match to opportunities</th><th>Status</th></tr>
-      ${BENCH.map(b=>`<tr><td>${b.name}</td><td>${b.rate}</td><td>${b.avail}</td><td>${b.match}</td>
-        <td><span class="chip ${BENCHCHIP[b.state]}">${b.state}</span></td></tr>`).join("")}
+      <tr><th>Consultant</th><th>Rate</th><th>June</th><th>July</th><th>August</th><th>Match / status</th></tr>
+      ${BENCH.map(b=>`<tr><td>${b.name}</td><td>${b.rate}</td>
+        ${(b.occ||[]).map(o=>`<td>${/⚠|Unassigned|Free/.test(o)&&!/soft/.test(o)?`<span class="chip ${/⚠/.test(o)?'red':'green'}">${o}</span>`:o}</td>`).join("")}
+        <td>${b.match}<br><span class="chip ${BENCHCHIP[b.state]}">${b.state}</span></td></tr>`).join("")}
     </table>
-    <p class="meta" style="margin-top:8px"><b style="color:var(--navy)">Demand signal from the pipeline:</b> if NovaMed and MedDev sign, July needs 2 QA consultants and the Regulatory SME at 50%. The match engine re-scores the bench nightly against open and likely opportunities.</p>
+    <p class="meta" style="margin-top:8px"><b style="color:var(--navy)">Demand overlay from the pipeline:</b> MedDev (70% probability) needs 2 Senior QA Validation engineers from 1 July; NovaMed discovery soft-holds the Regulatory SME at 50%. July is the crunch month: one unassigned mid-band engineer against two likely senior demands.</p>
+  </div>
+  <div class="grid g3">
+    <div class="stat"><div class="label">Open role capacity</div><div class="value">4</div><div class="sub">2 matched · 2 sourcing</div></div>
+    <div class="stat t"><div class="label">Avg sourcing timeline</div><div class="value">24d</div><div class="sub">requirement → offer · target 21</div></div>
+    <div class="stat"><div class="label">Contractor margin retention</div><div class="value">28%</div><div class="sub">vs 25% floor across active briefs</div></div>
   </div>`;
 
-  if(r==="delivery") return `
+  if(r==="delivery"){
+    const order={red:0,amber:1,green:2};
+    const projs=PROJECTS.map((p,i)=>({p,i})).sort((a,b)=>(order[a.p.rag]??3)-(order[b.p.rag]??3));
+    return `
   <div class="card">
-    <h3>Projects & client satisfaction <span class="chip neutral">PSOHub + QBR feedback</span></h3>
+    <h3>Live project RAG launchpad <span class="chip neutral">sorted by urgency · PSOHub + QBR feedback</span></h3>
     <table>
-      <tr><th>Project</th><th>Line</th><th>Status</th><th>CSAT</th><th>Note</th><th></th></tr>
-      ${PROJECTS.map((p,i)=>`<tr><td>${p.p}</td><td>${p.line}</td>
-        <td><span class="chip ${p.rag}">${p.rag.toUpperCase()}</span></td><td>${p.csat}</td>
-        <td>${p.note}${p.opp?`<br><span class="meta" style="color:var(--amber)">Opportunity heard: ${p.opp}</span>`:""}</td>
+      <tr><th>Project</th><th>Status</th><th>CSAT</th><th>Note</th><th></th></tr>
+      ${projs.map(({p,i})=>`<tr><td><b>${p.p}</b> <span class="meta">· ${p.line}</span>
+        <div class="tray">
+          <button class="btn ghost btnsm" onclick="launch('Asana','${p.p.replace(/'/g,"")} project board')">Launch Asana ↗</button>
+          <button class="btn ghost btnsm" onclick="launch('PSOHub','${p.p.replace(/'/g,"")} burn-rate sheet')">Launch PSOhub ↗</button>
+          <button class="btn ghost btnsm" onclick="launch('SharePoint','${p.p.replace(/'/g,"")} client folder')">SharePoint Folder ↗</button>
+        </div></td>
+        <td><span class="chip ${p.rag}">${p.rag.toUpperCase()}</span>${p.arOverdue?'<br><span class="chip red blink" style="margin-top:4px">⚠ Invoice overdue</span>':''}</td>
+        <td>${p.csat}</td>
+        <td>${p.note}${p.arOverdue?'<br><span class="meta" style="color:var(--red)">Finance cascade: 60+ day AR on this client (€18K). Tread carefully on scope conversations; chase is drafted in the Finance queue.</span>':''}${p.opp?`<br><span class="meta" style="color:var(--amber)">Opportunity heard: ${p.opp}</span>`:""}</td>
         <td>${p.opp?(p.passed?'<span class="chip green">passed to Sales</span>':`<button class="btn assign" onclick="passToSales(${i})">Pass to Sales</button>`):""}</td></tr>`).join("")}
     </table>
-    <p class="meta" style="margin-top:8px">Passing an opportunity creates a lead in the Sales pipeline with project context and CSAT attached, queues a LUCE brief, and logs the handoff. You stay the relationship owner.</p>
+    <p class="meta" style="margin-top:8px">Passing an opportunity registers a drafted Lead in Salesforce with project context and CSAT attached. The invoice-overdue flag is written automatically by Finance's AR ageing rules.</p>
   </div>`;
+  }
 
   if(r==="finance") return `
   <div class="grid g2">
@@ -976,14 +1335,58 @@ function roleBoard(){
     </div>
   </div>`;
 
-  /* exec */
+  /* exec: corporate plan matrix + leadership meeting centre + survey cascade */
   return `
+  <div class="grid g2" style="margin-bottom:14px">
+    <div class="card">
+      <h3>Corporate plan matrix <span class="chip neutral">planned vs live actuals</span></h3>
+      <p style="font-size:12.5px;color:var(--ink-soft)"><b style="color:var(--navy)">Annual plan:</b> ${PLAN.annual}</p>
+      <p style="font-size:12.5px;color:var(--ink-soft);margin-top:6px"><b style="color:var(--navy)">Quarterly blueprint:</b> ${PLAN.quarter}</p>
+      <div style="margin-top:12px">
+        ${PLAN.bars.map(b=>`<div class="bar-row"><span class="bl">${b.label}</span>
+          <div class="track"><div class="fill" style="width:${b.pct}%;background:${b.pct>=90?'var(--green)':b.pct>=45?'var(--navy)':'var(--amber)'}"></div></div>
+          <span class="bv">${b.note}</span></div>`).join("")}
+      </div>
+      <div class="qactions"><button class="btn ghost btnsm" onclick="launch('SharePoint','Corporate plan archive')">Open Plan Archive ↗</button></div>
+    </div>
+    <div class="card">
+      <h3>Leadership meeting centre <span class="chip neutral">Mon 9 Jun · agreed actions</span></h3>
+      ${LEAD_ACTIONS.map(a=>`<div class="checkrow"><span class="tick"></span>
+        <span style="flex:1;font-size:13px">${a.what}</span>
+        <span class="chip neutral">${a.owner}</span>
+        <span class="chip ${a.status==='done'?'green':a.status==='in motion'?'amber':'red'}">${a.status}</span></div>`).join("")}
+      <p class="meta" style="margin-top:8px">Minutes drafted by the Meeting Orchestrator; actions sync to owners' queues on approval.</p>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:14px">
+    <h3>Survey cascade <span class="chip neutral">leadership evaluations → operational actions</span></h3>
+    ${SURVEYS.map((s,i)=>`<div class="checkrow">
+      <span class="tick"></span>
+      <span style="flex:1;font-size:13px"><b>${s.title}</b> <span class="meta">· due ${s.due} · cascades to ${PEOPLE[s.target].fn}</span></span>
+      ${s.done?'<span class="chip green">submitted · action cascaded</span>':`<button class="btn approve btnsm" onclick="submitSurvey(${i})">Submit Survey</button>`}
+    </div>`).join("")}
+    <p class="meta" style="margin-top:8px">Submitting a survey writes an operational action item directly into the matching department's queue, with the survey response attached as context.</p>
+  </div>
   <div class="grid g4">
     <div class="stat"><div class="label">Revenue MTD</div><div class="value">€412k</div><div class="sub">margin 31% vs 33% target</div></div>
     <div class="stat"><div class="label">Client satisfaction</div><div class="value">4.5/5</div><div class="sub">NPS +41 · 1 at-risk account</div></div>
     <div class="stat t"><div class="label">People</div><div class="value">8.1/10</div><div class="sub">utilisation 78% · 1 bench alert</div></div>
     <div class="stat t"><div class="label">Awaiting your sign-off</div><div class="value">${visibleItems('exec').length}</div><div class="sub">EI entries + renewal recommendation</div></div>
   </div>`;
+}
+
+/* survey cascade: leadership evaluation → operational action in the target department's queue */
+function submitSurvey(i){
+  const s=SURVEYS[i]; if(!s||s.done) return;
+  s.done=true;
+  ITEMS.push({ id:"sv"+Date.now(), approver:s.target, line:"Cross-line", engine:"Audit", model:"Sonnet", tokens:"1.1k",
+    ts:"Just now", mins:30, flagged:s.target==="talent",
+    group: s.target==="talent" ? "Shadow demand forecast (Sales → Talent)" : "Leadership cascade",
+    title:`Leadership cascade: ${s.title}`,
+    body:s.cascade + " Survey response attached as context.",
+    trail:["Adelin (survey) → "+PEOPLE[s.target].name] });
+  render();
+  toast(`Survey submitted: operational action cascaded into the ${PEOPLE[s.target].fn} queue and synchronised across all active roles`);
 }
 
 function vApprovals(){
@@ -1058,7 +1461,77 @@ function vWorkbench(){
   </div>`;
 }
 
+function setKpiTab(t){ state.kpiTab=t; render(); }
 function vKPIs(){
+  if(state.role!=="exec") return vKPIsStd();
+  const t=state.kpiTab;
+  const tabs=["Company","Sales","Talent","Delivery","Finance"];
+  const head=`
+  <div class="pagehead"><h2>KPIs & reports — executive view</h2>
+  <p>Drill into any function. Figures are kept current by the agents; each shows source and freshness.</p></div>
+  <div class="filterbar">${tabs.map(x=>`<button class="${t===x?'active':''}" onclick="setKpiTab('${x}')">${x}</button>`).join("")}</div>`;
+  const views={
+    Company:`
+    <div class="grid g3" style="margin-bottom:16px">
+      <div class="stat"><div class="label">ARR</div><div class="value">€4.9M</div><div class="sub">+18% YoY · MRR €410k</div></div>
+      <div class="stat t"><div class="label">Cross-dept SLA compliance</div><div class="value">96%</div><div class="sub">avg across lead, SOW, close & freeze SLAs</div></div>
+      <div class="stat"><div class="label">Token ROI</div><div class="value">130×</div><div class="sub">€238 MTD spend vs ~€31k labour value returned</div></div>
+    </div>
+    <div class="card"><h3>SLA compliance by function</h3>
+      <div class="bar-row"><span class="bl">Sales (lead + proposal)</span><div class="track"><div class="fill" style="width:94%;background:var(--green)"></div></div><span class="bv">94%</span></div>
+      <div class="bar-row"><span class="bl">Delivery (SOW + freeze)</span><div class="track"><div class="fill" style="width:97%;background:var(--green)"></div></div><span class="bv">97%</span></div>
+      <div class="bar-row"><span class="bl">Finance (close gates)</span><div class="track"><div class="fill" style="width:100%;background:var(--green)"></div></div><span class="bv">100%</span></div>
+      <div class="bar-row"><span class="bl">Talent (sourcing)</span><div class="track"><div class="fill" style="width:89%;background:var(--amber)"></div></div><span class="bv">89%</span></div>
+    </div>`,
+    Sales:`
+    <div class="grid g3" style="margin-bottom:16px">
+      <div class="stat"><div class="label">Weighted pipeline</div><div class="value">€168K</div><div class="sub">of €391K in play · cover 2.8×</div></div>
+      <div class="stat t"><div class="label">Proposal conversion velocity</div><div class="value">3.8d</div><div class="sub">≤5d converts 62% · >5d converts 31%</div></div>
+      <div class="stat"><div class="label">Cost per lead</div><div class="value">€410</div><div class="sub">content-sourced leads at €180</div></div>
+    </div>
+    <div class="card"><h3>Pipeline by stage (weighted)</h3>
+      <div class="bar-row"><span class="bl">Lead</span><div class="track"><div class="fill" style="width:12%;background:var(--turq)"></div></div><span class="bv">€9K wtd</span></div>
+      <div class="bar-row"><span class="bl">Qualified</span><div class="track"><div class="fill" style="width:45%;background:var(--turq)"></div></div><span class="bv">€50K wtd</span></div>
+      <div class="bar-row"><span class="bl">Proposal</span><div class="track"><div class="fill" style="width:38%;background:var(--navy)"></div></div><span class="bv">€36K wtd</span></div>
+      <div class="bar-row"><span class="bl">SOW</span><div class="track"><div class="fill" style="width:65%;background:var(--navy)"></div></div><span class="bv">€73K wtd</span></div>
+    </div>`,
+    Talent:`
+    <div class="grid g3" style="margin-bottom:16px">
+      <div class="stat"><div class="label">Time-to-fill</div><div class="value">24d</div><div class="sub">requirement → offer · target 21</div></div>
+      <div class="stat t"><div class="label">Bench optimisation</div><div class="value">78%</div><div class="sub">83% achievable if D.O. places by 24 Jun</div></div>
+      <div class="stat"><div class="label">Sourcing overhead</div><div class="value">€1.2k</div><div class="sub">per hire · adverts + assessments + refs</div></div>
+    </div>
+    <div class="card"><h3>July demand vs supply</h3>
+      <div class="bar-row"><span class="bl">Senior QA Validation</span><div class="track"><div class="fill" style="width:100%;background:var(--red)"></div></div><span class="bv">2 needed · 0 free</span></div>
+      <div class="bar-row"><span class="bl">Regulatory SME</span><div class="track"><div class="fill" style="width:50%;background:var(--amber)"></div></div><span class="bv">50% soft-held</span></div>
+      <div class="bar-row"><span class="bl">Mid-band engineers</span><div class="track"><div class="fill" style="width:30%;background:var(--green)"></div></div><span class="bv">1 free (D.O.)</span></div>
+    </div>`,
+    Delivery:`
+    <div class="grid g3" style="margin-bottom:16px">
+      <div class="stat"><div class="label">Milestone on-time delivery</div><div class="value">87%</div><div class="sub">Audit Tool driving the misses</div></div>
+      <div class="stat t"><div class="label">Burn-rate variance</div><div class="value">+4.2%</div><div class="sub">LUCE connector slippage</div></div>
+      <div class="stat"><div class="label">CSAT</div><div class="value">4.5/5</div><div class="sub">live log below</div></div>
+    </div>
+    <div class="card"><h3>Real-time CSAT log</h3>
+      <div class="checkrow"><span class="tick"></span><span style="flex:1;font-size:13px">ARIA · 4.6 — "saved us weeks of preparation before our inspection" (QA Director, harvested to Reference Assets)</span><span class="chip green">rising</span></div>
+      <div class="checkrow"><span class="tick"></span><span style="flex:1;font-size:13px">Audit Tool · 3.9 — frustration over the SLA miss; recovery plan agreed at leadership</span><span class="chip red">at risk</span></div>
+      <div class="checkrow"><span class="tick"></span><span style="flex:1;font-size:13px">Olympus training · pulse pending content freeze decision</span><span class="chip amber">watch</span></div>
+    </div>`,
+    Finance:`
+    <div class="grid g3" style="margin-bottom:16px">
+      <div class="stat"><div class="label">DSO</div><div class="value">38d</div><div class="sub">down from 44 · target 35</div></div>
+      <div class="stat t"><div class="label">AR overdue (60+)</div><div class="value">€18K</div><div class="sub">1 client · chase drafted · delivery flagged</div></div>
+      <div class="stat"><div class="label">Unbilled accruals</div><div class="value">€27K</div><div class="sub">2 engagements · invoice at next gate</div></div>
+    </div>
+    <div class="card"><h3>AR ageing</h3>
+      ${FIN_AR.map(a=>`<div class="bar-row"><span class="bl">${a[0]}</span>
+        <div class="track"><div class="fill" style="width:${a[2]};background:var(--${a[3]==='green'?'green':a[3]==='amber'?'amber':'red'})"></div></div>
+        <span class="bv">${a[1]}</span></div>`).join("")}
+    </div>`,
+  };
+  return head + views[t];
+}
+function vKPIsStd(){
   return `
   <div class="pagehead"><h2>KPIs & reports</h2>
   <p>The agents do not calculate strategy; they keep these numbers current. Each figure shows where it came from and when it was last refreshed, with low-confidence data flagged rather than hidden.</p></div>
@@ -1188,6 +1661,21 @@ function vProv(){
       <tr><th>Date</th><th>Source</th><th>Correction type</th><th>By</th><th>Detail</th></tr>
       ${CORRECTIONS.map(c=>`<tr><td>${c.date}</td><td>${c.agent}</td><td>${c.type}</td><td>${c.by}</td><td>${c.detail}</td></tr>`).join("")}
     </table>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3>Prompt tuning sandbox <span class="chip neutral">regression-test before deploying</span></h3>
+    <p class="meta" style="margin-bottom:10px">Pick a real correction from the log, adjust the topping's baseline prompt rules, and run a simulated batch regression across the historical entries. Nothing deploys without a clean run.</p>
+    <div class="qactions" style="margin-top:0">
+      <span style="font-size:13px">Historical input:</span>
+      <select class="assign-sel" id="sbCase" onchange="sandboxLoadCase()" style="max-width:380px">
+        ${Object.keys(SANDBOX_CASES).map(k=>`<option>${k}</option>`).join("")}
+      </select>
+    </div>
+    <label class="meta" style="display:block;margin:10px 0 4px;font-weight:700;letter-spacing:.08em;text-transform:uppercase">Baseline prompt rules (editable)</label>
+    <textarea class="sbprompt" id="sbPrompt">${SANDBOX_CASES["Tone edit before approval"].prompt}</textarea>
+    <div class="qactions"><button class="btn approve" onclick="runSandbox()">Simulate regression test</button>
+    <span class="meta">Batch-runs the modified prompt across past Correction_Log entries; side-by-side diff below.</span></div>
+    <div id="sbResult"></div>
   </div>
   <div class="footer-note">Every output records engine, model version, token count, timestamp, approver and handoff trail: the discipline that makes these engines safe for client and GxP work.</div>`;
 }
