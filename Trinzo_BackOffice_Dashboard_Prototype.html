@@ -240,10 +240,21 @@
 
 <script>
 /* =====================================================================
-   Trinzo back-office control surface, v2.
-   Brand: #01163B primary, #17D0C4 accent, Roboto, white background.
-   All data is mock; state is in-memory (refresh resets the demo).
+   Trinzo — Back-Office Control Surface (v6)
+   Brand tokens: --navy #01163B · --turq #17D0C4 · Roboto · white bg.
+   Single-file vanilla HTML/CSS/JS. All data mock; refresh resets state.
+
+   Script layout (in order):
+     SECTION 1 · DATA & STATE      people, items, chains, pipeline, rules
+     SECTION 2 · ACTIONS & LOGIC   approve/assign, cascades, simulations
+     SECTION 3 · VIEWS & RENDERING render() + one v-function per page
    ===================================================================== */
+
+
+/* ======================================================================
+   SECTION 1 · DATA & STATE
+   Every array and object the views render from. Mock data; refresh resets.
+   ====================================================================== */
 
 const PEOPLE = {
   coordinator:{ name:"Aoife",  fn:"AI Hub Operations",                note:"Agent health, adoption, every queue" },
@@ -686,6 +697,34 @@ const ENGINES = [
     tops:["LUCE pre-sales regulatory briefs","SOP and policy Q&A with citations","Candidate and consultant matching","Rate card and contract lookups"] },
 ];
 
+/* ---------------- prompt tuning sandbox ---------------- */
+const SANDBOX_CASES = {
+  "Tone edit before approval":{
+    prompt:"You draft LinkedIn posts from webinar transcripts.\nVoice: confident, plain English. UK spelling.\nBanned words: revolutionary, game-changing, thrilled, delighted.\nStructure: hook line, one concrete insight, one CTA. Max 120 words.",
+    orig:"We're thrilled to announce a revolutionary approach to GxP validation that will completely transform how your team works…",
+    fixed:"A practical approach to GxP validation: what changed in our client's audit prep, and why the 80/10/10 split mattered more than the tooling." },
+  "Wrong owner assigned":{
+    prompt:"You extract action items from meeting transcripts.\nOwner attribution: resolve speakers against the attendee role map before assigning.\nIf attribution confidence < 0.8, mark owner as TENTATIVE and flag for review.",
+    orig:"Action: Sarah to deliver the ingestion connector by Friday.",
+    fixed:"Action: contractor (AI Engineer) to deliver the ingestion connector by Friday — speaker disambiguated via the attendee role map (confidence 0.93)." },
+  "Status overridden after approval":{
+    prompt:"You synthesise RAG status from Asana, SharePoint and transcripts.\nNew rule: check transcripts for client-side dependencies not present in Asana; if found, cap status at Amber and cite the source.",
+    orig:"LUCE: Green — all Asana tasks on track.",
+    fixed:"LUCE: Amber — Asana on track, but the Tue transcript (00:22) records a client-side dependency on tenant access; cited in the report." },
+};
+/* ---------------- dead-letter exception queue ---------------- */
+let DEADLETTER = [
+  { ev:"Teams transcript ingest (LUCE stand-up)", err:"Payload below the 500-word poka-yoke ceiling; held back, no partial extraction", code:"EXTRACT_MIN_WORDS · DL-1042", t:"Today 10:15", status:"held" },
+  { ev:"Salesforce lead sync", err:"OAuth token refresh failed; retried 3× with backoff before parking", code:"SF_AUTH_401 · DL-1041", t:"Today 06:31", status:"failed" },
+  { ev:"Spendesk invoice webhook", err:"Third-party schema drift: unrecognised field 'vat_region' in payload", code:"SCHEMA_DRIFT · DL-1039", t:"Yesterday 17:12", status:"failed" },
+  { ev:"Gamma slide generation (Olympus deck)", err:"Generation timed out at 120s during peak; queued output discarded safely", code:"GAMMA_TIMEOUT · DL-1037", t:"Yesterday 15:40", status:"recovered" },
+];
+
+/* ======================================================================
+   SECTION 2 · ACTIONS & LOGIC
+   State mutations, cross-functional cascades, simulations. No HTML here.
+   ====================================================================== */
+
 /* ---------------- helpers ---------------- */
 
 function visibleItems(role){
@@ -779,28 +818,6 @@ function launch(app, target){
   toast(`Opening ${app}: ${target} — simulated deep link, synchronised across all active roles`);
 }
 
-/* ---------------- connectors ---------------- */
-function vConnectors(){
-  return `
-  <div class="pagehead"><h2>SaaS connectors</h2>
-  <p>The integration grid behind the engines: every data stream the agents read from or write to, with live API health. Connecting a new app binds its stream to one of the four foundational engines — configuration, not code.</p></div>
-  <div class="grid g4" style="margin-bottom:16px">
-    ${CONNECTORS.map((c,i)=>`
-      <div class="card">
-        <h3 style="font-size:14px">${c.name}</h3>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <span class="dot ${c.status==='live'?'conn':c.status==='connecting'?'flight':'off'}" style="margin-top:0"></span>
-          <span class="chip ${c.status==='live'?'green':c.status==='connecting'?'amber':'neutral'}">${c.status==='live'?'API healthy':c.status==='connecting'?'connecting…':'not connected'}</span>
-        </div>
-        <div class="meta">Bound engines: <b style="color:var(--ink-soft)">${c.engines}</b></div>
-        <div class="meta" style="margin-top:3px">${c.last}</div>
-        ${c.status==='off'?`<div class="qactions"><button class="btn ghost btnsm" onclick="openConnect('${c.name}')">Connect</button></div>`:""}
-      </div>`).join("")}
-  </div>
-  <button class="btn approve" onclick="openConnect('')">+ Connect new app / SaaS</button>
-  <div class="footer-note">Credentials are stored in the platform vault, never in agent prompts. Every connector write goes through an approval queue; no stream gets direct write access to a system of record.</div>`;
-}
-
 function openConnect(name){
   const m=document.getElementById("modal");
   m.innerHTML=`<div class="mbox">
@@ -830,53 +847,6 @@ function confirmConnect(){
     rec.status="live"; rec.last="synced just now · first ingest queued for approval";
     render(); toast(`${name} connected: stream bound to the ${eng} engine and written to the schema layer`);
   }, 1800);
-}
-
-/* ---------------- settings & rules ---------------- */
-function vSettings(){
-  const ppl=Object.entries(PEOPLE);
-  return `
-  <div class="pagehead"><h2>Settings & rules</h2>
-  <p>The heuristic thresholds the Audit and Extract engines run against, adjustable without touching the build. Changes are written to the schema layer and apply to every queue and chain immediately.</p></div>
-
-  <div class="card" style="margin-bottom:16px">
-    <h3>Heuristic thresholds</h3>
-    <div class="setrow"><div class="sl"><b>Minimum project margin floor (%)</b>
-      <span class="meta">The Audit engine raises a Margin Watch alert when any engagement drops below this.</span></div>
-      <input type="number" id="stMargin" value="${SETTINGS.marginFloor}" min="0" max="80"></div>
-    <div class="setrow"><div class="sl"><b>Transcript poka-yoke ceiling (words)</b>
-      <span class="meta">Transcripts below this word count are held back; no partial actions are extracted.</span></div>
-      <input type="number" id="stWords" value="${SETTINGS.transcriptMin}" min="100" step="50"></div>
-    <div class="setrow"><div class="sl"><b>Stale task alarm (days)</b>
-      <span class="meta">Tasks untouched longer than this mark their project's data confidence as LOW in RAG reports.</span></div>
-      <select id="stStale">${[3,5,7,10].map(d=>`<option ${d===SETTINGS.staleDays?'selected':''}>${d}</option>`).join("")}</select></div>
-    <div class="setrow"><div class="sl"><b>Queue ageing escalation clock (hours)</b>
-      <span class="meta">Items pending longer than this flag on the Coordinator's adoption board.</span></div>
-      <input type="number" id="stAge" value="${SETTINGS.queueAgeHours}" min="4" step="4"></div>
-    <div class="setrow"><div class="sl"><b>AR overdue escalation (days)</b>
-      <span class="meta">Finance cascade: Xero ledger entries older than this write a flashing invoice-overdue flag onto the matching project's delivery row.</span></div>
-      <input type="number" id="stAr" value="${SETTINGS.arEscalationDays}" min="15" step="15"></div>
-    <div class="qactions" style="margin-top:12px"><button class="btn approve" onclick="saveRules()">Apply rules</button>
-    <span class="meta">Applies to the Audit and Extract engines across all functions.</span></div>
-  </div>
-
-  <div class="card">
-    <h3>Auto-delegation routing</h3>
-    <p class="meta" style="margin-bottom:8px">Temporary out-of-office overrides: pending and future queue items for the absent person route automatically to the named backup. The handoff log records every redirected item.</p>
-    <div class="qactions">
-      <span style="font-size:13px">While</span>
-      <select class="assign-sel" id="dlWho">${ppl.map(([k,v])=>`<option value="${k}">${v.name} (${v.fn})</option>`).join("")}</select>
-      <span style="font-size:13px">is out of office, route their approvals to</span>
-      <select class="assign-sel" id="dlTo">${ppl.map(([k,v])=>`<option value="${k}">${v.name} (${v.fn})</option>`).join("")}</select>
-      <button class="btn approve" onclick="applyDelegation()">Apply</button>
-    </div>
-    <div style="margin-top:12px">
-      ${Object.keys(DELEGATIONS).length===0?'<span class="meta">No active delegations.</span>':
-        Object.entries(DELEGATIONS).map(([w,b])=>`<span class="chip amber" style="margin-right:6px">${PEOPLE[w].name} → ${PEOPLE[b].name} (OOO)
-          <a style="cursor:pointer;margin-left:4px" onclick="endDelegation('${w}')">✕</a></span>`).join("")}
-    </div>
-  </div>
-  <div class="footer-note">Rule changes and delegations are themselves logged with who-changed-what in the provenance layer.</div>`;
 }
 
 function saveRules(){
@@ -909,21 +879,6 @@ function applyDelegation(){
 }
 function endDelegation(who){ delete DELEGATIONS[who]; render(); toast(`Delegation ended for ${PEOPLE[who].name}; new items route normally`); }
 
-/* ---------------- prompt tuning sandbox ---------------- */
-const SANDBOX_CASES = {
-  "Tone edit before approval":{
-    prompt:"You draft LinkedIn posts from webinar transcripts.\nVoice: confident, plain English. UK spelling.\nBanned words: revolutionary, game-changing, thrilled, delighted.\nStructure: hook line, one concrete insight, one CTA. Max 120 words.",
-    orig:"We're thrilled to announce a revolutionary approach to GxP validation that will completely transform how your team works…",
-    fixed:"A practical approach to GxP validation: what changed in our client's audit prep, and why the 80/10/10 split mattered more than the tooling." },
-  "Wrong owner assigned":{
-    prompt:"You extract action items from meeting transcripts.\nOwner attribution: resolve speakers against the attendee role map before assigning.\nIf attribution confidence < 0.8, mark owner as TENTATIVE and flag for review.",
-    orig:"Action: Sarah to deliver the ingestion connector by Friday.",
-    fixed:"Action: contractor (AI Engineer) to deliver the ingestion connector by Friday — speaker disambiguated via the attendee role map (confidence 0.93)." },
-  "Status overridden after approval":{
-    prompt:"You synthesise RAG status from Asana, SharePoint and transcripts.\nNew rule: check transcripts for client-side dependencies not present in Asana; if found, cap status at Amber and cite the source.",
-    orig:"LUCE: Green — all Asana tasks on track.",
-    fixed:"LUCE: Amber — Asana on track, but the Tue transcript (00:22) records a client-side dependency on tenant access; cited in the report." },
-};
 function runSandbox(){
   const sel=document.getElementById("sbCase").value;
   const out=document.getElementById("sbResult");
@@ -946,6 +901,17 @@ function sandboxLoadCase(){
   const c=SANDBOX_CASES[sel];
   document.getElementById("sbPrompt").value=c?c.prompt:"// baseline prompt rules for this topping";
   document.getElementById("sbResult").innerHTML="";
+}
+
+function retryEvent(i){
+  const d=DEADLETTER[i]; if(!d||d.status==="retrying"||d.status==="recovered") return;
+  d.status="retrying"; render();
+  toast(`Retrying ${d.ev}: replaying the event against the current schema…`);
+  setTimeout(()=>{
+    d.status="recovered"; d.t="Just now";
+    d.err+=" — replay succeeded; downstream queue items regenerated";
+    render(); toast(`${d.ev}: ingestion recovered and synchronised across all active roles`);
+  },1800);
 }
 
 function fireTrigger(id){
@@ -1007,6 +973,12 @@ function passToSales(idx){
   render();
   toast(`Webhook → Salesforce: drafted Lead ${sfId} registered; pipeline updated and synchronised across all active roles`);
 }
+
+
+/* ======================================================================
+   SECTION 3 · VIEWS & RENDERING
+   Pure functions: state in, HTML string out. One v-function per page.
+   ====================================================================== */
 
 /* ---------------- rendering ---------------- */
 
@@ -1285,16 +1257,17 @@ function roleBoard(){
     <h3>Live project RAG launchpad <span class="chip neutral">sorted by urgency · PSOHub + QBR feedback</span></h3>
     <table>
       <tr><th>Project</th><th>Status</th><th>CSAT</th><th>Note</th><th></th></tr>
-      ${projs.map(({p,i})=>`<tr><td><b>${p.p}</b> <span class="meta">· ${p.line}</span>
-        <div class="tray">
-          <button class="btn ghost btnsm" onclick="launch('Asana','${p.p.replace(/'/g,"")} project board')">Launch Asana ↗</button>
-          <button class="btn ghost btnsm" onclick="launch('PSOHub','${p.p.replace(/'/g,"")} burn-rate sheet')">Launch PSOhub ↗</button>
-          <button class="btn ghost btnsm" onclick="launch('SharePoint','${p.p.replace(/'/g,"")} client folder')">SharePoint Folder ↗</button>
-        </div></td>
+      ${projs.map(({p,i})=>`<tr><td><b>${p.p}</b> <span class="meta">· ${p.line}</span></td>
         <td><span class="chip ${p.rag}">${p.rag.toUpperCase()}</span>${p.arOverdue?'<br><span class="chip red blink" style="margin-top:4px">⚠ Invoice overdue</span>':''}</td>
         <td>${p.csat}</td>
         <td>${p.note}${p.arOverdue?'<br><span class="meta" style="color:var(--red)">Finance cascade: 60+ day AR on this client (€18K). Tread carefully on scope conversations; chase is drafted in the Finance queue.</span>':''}${p.opp?`<br><span class="meta" style="color:var(--amber)">Opportunity heard: ${p.opp}</span>`:""}</td>
-        <td>${p.opp?(p.passed?'<span class="chip green">passed to Sales</span>':`<button class="btn assign" onclick="passToSales(${i})">Pass to Sales</button>`):""}</td></tr>`).join("")}
+        <td style="text-align:right">
+          <div class="tray" style="justify-content:flex-end">
+            <button class="btn ghost btnsm" onclick="launch('Asana','${p.p.replace(/'/g,"")} project board')">Launch Asana ↗</button>
+            <button class="btn ghost btnsm" onclick="launch('PSOHub','${p.p.replace(/'/g,"")} burn-rate sheet')">Launch PSOhub ↗</button>
+            <button class="btn ghost btnsm" onclick="launch('SharePoint','${p.p.replace(/'/g,"")} client archive')">SharePoint Archive ↗</button>
+          </div>
+          ${p.opp?(p.passed?'<span class="chip green" style="margin-top:5px">passed to Sales</span>':`<button class="btn assign btnsm" style="margin-top:5px" onclick="passToSales(${i})">Pass to Sales</button>`):""}</td></tr>`).join("")}
     </table>
     <p class="meta" style="margin-top:8px">Passing an opportunity registers a drafted Lead in Salesforce with project context and CSAT attached. The invoice-overdue flag is written automatically by Finance's AR ageing rules.</p>
   </div>`;
@@ -1335,8 +1308,21 @@ function roleBoard(){
     </div>
   </div>`;
 
-  /* exec: corporate plan matrix + leadership meeting centre + survey cascade */
+  /* exec: ESPI matrix + corporate plan + leadership meeting centre + survey cascade */
+  const ragCounts = PROJECTS.reduce((a,p)=>(a[p.rag]=(a[p.rag]||0)+1,a),{});
   return `
+  <div class="card" style="margin-bottom:14px">
+    <h3>Enterprise strategic performance index <span class="chip neutral">all functions vs macro goals · live</span></h3>
+    <table>
+      <tr><th>Function</th><th>Live metric</th><th>Macro goal</th><th>Gap</th><th>Status</th></tr>
+      <tr><td>Sales & Marketing</td><td>Weighted pipeline €168K · 2 deals in 5-day window</td><td>€200K weighted · cover 3.0×</td><td>−€32K · cover 2.8×</td><td><span class="chip amber">closing gap</span></td></tr>
+      <tr><td>Talent Acquisition</td><td>Bench occupancy 78% · 1 unassigned from 24 Jun</td><td>85% occupancy · zero idle seniors</td><td>−7pts · July crunch flagged</td><td><span class="chip amber">demand mismatch</span></td></tr>
+      <tr><td>Client Delivery</td><td>RAG: ${ragCounts.green||0} green · ${ragCounts.amber||0} amber · ${ragCounts.red||0} red · CSAT 4.5</td><td>Zero red · CSAT ≥ 4.5</td><td>1 red (Audit Tool, recovery agreed)</td><td><span class="chip red">1 escalation</span></td></tr>
+      <tr><td>Finance</td><td>DSO 38 days · €18K in 60+ AR</td><td>DSO ≤ 35 · zero 60+ AR</td><td>+3 days · 1 overdue client</td><td><span class="chip amber">improving</span></td></tr>
+      <tr><td>AI Hub Operations</td><td>96% SLA compliance · 2 poka-yoke holds · €238 token spend</td><td>≥95% compliance · ROI > 50×</td><td>on goal · ROI ~130×</td><td><span class="chip green">on goal</span></td></tr>
+    </table>
+    <p class="meta" style="margin-top:8px">Each row reads live from the same arrays that power the department cockpits; nothing is retyped for leadership.</p>
+  </div>
   <div class="grid g2" style="margin-bottom:14px">
     <div class="card">
       <h3>Corporate plan matrix <span class="chip neutral">planned vs live actuals</span></h3>
@@ -1603,6 +1589,75 @@ function vKPIsStd(){
   </div>`;
 }
 
+/* ---------------- connectors ---------------- */
+function vConnectors(){
+  return `
+  <div class="pagehead"><h2>SaaS connectors</h2>
+  <p>The integration grid behind the engines: every data stream the agents read from or write to, with live API health. Connecting a new app binds its stream to one of the four foundational engines — configuration, not code.</p></div>
+  <div class="grid g4" style="margin-bottom:16px">
+    ${CONNECTORS.map((c,i)=>`
+      <div class="card">
+        <h3 style="font-size:14px">${c.name}</h3>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span class="dot ${c.status==='live'?'conn':c.status==='connecting'?'flight':'off'}" style="margin-top:0"></span>
+          <span class="chip ${c.status==='live'?'green':c.status==='connecting'?'amber':'neutral'}">${c.status==='live'?'API healthy':c.status==='connecting'?'connecting…':'not connected'}</span>
+        </div>
+        <div class="meta">Bound engines: <b style="color:var(--ink-soft)">${c.engines}</b></div>
+        <div class="meta" style="margin-top:3px">${c.last}</div>
+        ${c.status==='off'?`<div class="qactions"><button class="btn ghost btnsm" onclick="openConnect('${c.name}')">Connect</button></div>`:""}
+      </div>`).join("")}
+  </div>
+  <button class="btn approve" onclick="openConnect('')">+ Connect new app / SaaS</button>
+  <div class="footer-note">Credentials are stored in the platform vault, never in agent prompts. Every connector write goes through an approval queue; no stream gets direct write access to a system of record.</div>`;
+}
+
+/* ---------------- settings & rules ---------------- */
+function vSettings(){
+  const ppl=Object.entries(PEOPLE);
+  return `
+  <div class="pagehead"><h2>Settings & rules</h2>
+  <p>The heuristic thresholds the Audit and Extract engines run against, adjustable without touching the build. Changes are written to the schema layer and apply to every queue and chain immediately.</p></div>
+
+  <div class="card" style="margin-bottom:16px">
+    <h3>Heuristic thresholds</h3>
+    <div class="setrow"><div class="sl"><b>Minimum project margin floor (%)</b>
+      <span class="meta">The Audit engine raises a Margin Watch alert when any engagement drops below this.</span></div>
+      <input type="number" id="stMargin" value="${SETTINGS.marginFloor}" min="0" max="80"></div>
+    <div class="setrow"><div class="sl"><b>Transcript poka-yoke ceiling (words)</b>
+      <span class="meta">Transcripts below this word count are held back; no partial actions are extracted.</span></div>
+      <input type="number" id="stWords" value="${SETTINGS.transcriptMin}" min="100" step="50"></div>
+    <div class="setrow"><div class="sl"><b>Stale task alarm (days)</b>
+      <span class="meta">Tasks untouched longer than this mark their project's data confidence as LOW in RAG reports.</span></div>
+      <select id="stStale">${[3,5,7,10].map(d=>`<option ${d===SETTINGS.staleDays?'selected':''}>${d}</option>`).join("")}</select></div>
+    <div class="setrow"><div class="sl"><b>Queue ageing escalation clock (hours)</b>
+      <span class="meta">Items pending longer than this flag on the Coordinator's adoption board.</span></div>
+      <input type="number" id="stAge" value="${SETTINGS.queueAgeHours}" min="4" step="4"></div>
+    <div class="setrow"><div class="sl"><b>AR overdue escalation (days)</b>
+      <span class="meta">Finance cascade: Xero ledger entries older than this write a flashing invoice-overdue flag onto the matching project's delivery row.</span></div>
+      <input type="number" id="stAr" value="${SETTINGS.arEscalationDays}" min="15" step="15"></div>
+    <div class="qactions" style="margin-top:12px"><button class="btn approve" onclick="saveRules()">Apply rules</button>
+    <span class="meta">Applies to the Audit and Extract engines across all functions.</span></div>
+  </div>
+
+  <div class="card">
+    <h3>Auto-delegation routing</h3>
+    <p class="meta" style="margin-bottom:8px">Temporary out-of-office overrides: pending and future queue items for the absent person route automatically to the named backup. The handoff log records every redirected item.</p>
+    <div class="qactions">
+      <span style="font-size:13px">While</span>
+      <select class="assign-sel" id="dlWho">${ppl.map(([k,v])=>`<option value="${k}">${v.name} (${v.fn})</option>`).join("")}</select>
+      <span style="font-size:13px">is out of office, route their approvals to</span>
+      <select class="assign-sel" id="dlTo">${ppl.map(([k,v])=>`<option value="${k}">${v.name} (${v.fn})</option>`).join("")}</select>
+      <button class="btn approve" onclick="applyDelegation()">Apply</button>
+    </div>
+    <div style="margin-top:12px">
+      ${Object.keys(DELEGATIONS).length===0?'<span class="meta">No active delegations.</span>':
+        Object.entries(DELEGATIONS).map(([w,b])=>`<span class="chip amber" style="margin-right:6px">${PEOPLE[w].name} → ${PEOPLE[b].name} (OOO)
+          <a style="cursor:pointer;margin-left:4px" onclick="endDelegation('${w}')">✕</a></span>`).join("")}
+    </div>
+  </div>
+  <div class="footer-note">Rule changes and delegations are themselves logged with who-changed-what in the provenance layer.</div>`;
+}
+
 function vTriggers(){
   return `
   <div class="pagehead"><h2>Workflows & triggers</h2>
@@ -1676,6 +1731,20 @@ function vProv(){
     <div class="qactions"><button class="btn approve" onclick="runSandbox()">Simulate regression test</button>
     <span class="meta">Batch-runs the modified prompt across past Correction_Log entries; side-by-side diff below.</span></div>
     <div id="sbResult"></div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h3>Dead-letter exception queue <span class="chip ${DEADLETTER.some(d=>d.status==='failed')?'red':'green'}">${DEADLETTER.filter(d=>d.status==='failed').length} unresolved</span></h3>
+    <p class="meta" style="margin-bottom:10px">Events the pipelines could not process safely: parked here rather than silently dropped. Retry replays the event against the current schema; recovered events regenerate their downstream queue items.</p>
+    <table>
+      <tr><th>Event</th><th>Error description</th><th>Error code</th><th>When</th><th>Status</th><th></th></tr>
+      ${DEADLETTER.map((d,i)=>`<tr>
+        <td>${d.ev}</td><td>${d.err}</td>
+        <td style="font-family:ui-monospace,Menlo,monospace;font-size:11px">${d.code}</td>
+        <td>${d.t}</td>
+        <td><span class="chip ${d.status==='recovered'?'green':d.status==='retrying'?'amber':d.status==='held'?'amber':'red'}">${d.status}</span></td>
+        <td>${d.status==='failed'||d.status==='held'?`<button class="btn approve btnsm" onclick="retryEvent(${i})">Retry Event Ingestion</button>`:d.status==='retrying'?'<span class="meta">replaying…</span>':''}</td></tr>`).join("")}
+    </table>
   </div>
   <div class="footer-note">Every output records engine, model version, token count, timestamp, approver and handoff trail: the discipline that makes these engines safe for client and GxP work.</div>`;
 }
